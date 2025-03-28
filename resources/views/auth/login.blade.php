@@ -6,9 +6,9 @@
     <title>Iniciar Sesión - Orden de Pago</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100">
+<body class="bg-cover bg-center bg-no-repeat" style="background-image: url('{{ asset('images/background/backgroundte.jpg') }}')">
     <div class="min-h-screen flex items-center justify-center">
-        <div class="max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg">
+        <div class="max-w-md w-full space-y-8 p-8 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
             <div>
                 <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
                     Iniciar Sesión
