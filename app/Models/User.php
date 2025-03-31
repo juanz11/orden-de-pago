@@ -22,8 +22,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'cedula',
-        'departamento',
         'role',
     ];
 
@@ -53,14 +51,6 @@ class User extends Authenticatable
     public function isAdmin(): bool
     {
         return $this->role === 'admin';
-    }
-
-    /**
-     * Check if user is guest
-     */
-    public function isGuest(): bool
-    {
-        return $this->role === 'guest';
     }
 
     /**

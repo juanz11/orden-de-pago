@@ -28,6 +28,5 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
-        ->middleware('role:admin')
         ->name('orders.update-status');
 });

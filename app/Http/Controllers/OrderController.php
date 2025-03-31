@@ -38,12 +38,12 @@ class OrderController extends Controller
     public function updateStatus(Order $order, Request $request)
     {
         if (!auth()->user()->isAdmin()) {
-            abort(403);
+            abort(403, 'No tienes permiso para realizar esta acción.');
         }
 
         $validated = $request->validate([
             'status' => 'required|in:approved,declined',
-            'admin_comments' => 'required|string',
+            'admin_comments' => 'nullable|string',
         ]);
 
         $order->update($validated);

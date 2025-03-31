@@ -19,7 +19,7 @@
                         <!-- Logo -->
                         <div class="shrink-0 flex items-center">
                             <a href="{{ route('dashboard') }}">
-                                <img class="h-12" src="https://raw.githubusercontent.com/sefirosweb/bootstrap-react-crud/master/docs/crud.png" alt="Logo">
+                                <img class="h-12" src="https://muestras.sncpharma.com/images/logo/1.png" alt="Logo">
                             </a>
                         </div>
 

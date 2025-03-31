@@ -11,7 +11,9 @@
         <div class="max-w-md w-full space-y-8 p-8 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
             <div>
                 <div class="flex justify-center">
-                    <img src="https://muestras.sncpharma.com/images/logo/1.png" alt="Logo" class="h-32">
+                    <a href="/">
+                        <img src="https://muestras.sncpharma.com/images/logo/1.png" alt="Logo" class="h-32">
+                    </a>
                 </div>
                 <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
                     Iniciar Sesión

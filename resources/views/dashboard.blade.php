@@ -1,43 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Orden de Pago</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Dashboard - {{ config('app.name', 'Laravel') }}</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-100">
+    <!-- Navigation -->
     <nav class="bg-white shadow">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <div class="flex-shrink-0 flex items-center">
-                        <img src="https://muestras.sncpharma.com/images/logo/1.png" alt="Logo" class="h-12 w-auto mr-3">
-                        <h1 class="text-xl font-bold text-gray-800">Orden de Pago</h1>
-                    </div>
-                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                        <a href="{{ route('dashboard') }}" class="border-indigo-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Dashboard
-                        </a>
-                        @if(auth()->user()->isAdmin())
-                        <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Gestionar Usuarios
-                        </a>
-                        <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Reportes
-                        </a>
-                        <a href="#" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Configuración
-                        </a>
-                        @endif
-                    </div>
+        <div class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
+            <div class="relative flex justify-between h-16">
+                <div class="flex-shrink-0 flex items-center">
+                    <img class="h-12" src="https://muestras.sncpharma.com/images/logo/1.png" alt="Logo">
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-500">{{ auth()->user()->role === 'admin' ? 'Administrador' : 'Invitado' }}</span>
-                    <form method="POST" action="{{ route('logout') }}">
+                <div class="flex items-center">
+                    <form method="POST" action="{{ route('logout') }}" class="flex">
                         @csrf
                         <button type="submit" class="text-gray-600 hover:text-gray-900">
-                            Cerrar sesión
+                            Cerrar Sesión
                         </button>
                     </form>
                 </div>
@@ -45,6 +26,7 @@
         </div>
     </nav>
 
+    <!-- Main Content -->
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div class="px-4 py-6 sm:px-0">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
