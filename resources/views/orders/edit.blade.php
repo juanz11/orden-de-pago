@@ -73,7 +73,7 @@
                 </div>
 
                 <div class="flex items-center justify-end">
-                    <button type="submit" class="bg-green-500 hover:bg-green-600 font-bold py-3 px-8 rounded-lg text-lg border-2 border-green-600 shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl">
+                    <button type="submit" style="background-color: #10B981; color: white;" class="hover:bg-green-600 font-bold py-3 px-8 rounded-lg text-lg border-2 border-green-600 shadow-lg transform transition-all duration-200 hover:scale-105 hover:shadow-xl">
                         Guardar Cambios
                     </button>
                 </div>
