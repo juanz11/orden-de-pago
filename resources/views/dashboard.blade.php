@@ -12,6 +12,7 @@
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
+                        <img src="https://muestras.sncpharma.com/images/logo/1.png" alt="Logo" class="h-12 w-auto mr-3">
                         <h1 class="text-xl font-bold text-gray-800">Orden de Pago</h1>
                     </div>
                 </div>

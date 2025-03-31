@@ -10,6 +10,9 @@
     <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
         <div class="max-w-md w-full space-y-8 bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-lg">
             <div>
+                <div class="flex justify-center">
+                    <img src="https://muestras.sncpharma.com/images/logo/1.png" alt="Logo" class="h-32">
+                </div>
                 <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
                     Crear una cuenta
                 </h2>
