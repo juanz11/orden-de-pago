@@ -1,72 +1,73 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-    <div class="px-4 py-6 sm:px-0">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-2xl font-bold text-gray-900">
-                {{ auth()->user()->isAdmin() ? 'Todas las Órdenes' : 'Mis Órdenes' }}
-            </h2>
-            @if(!auth()->user()->isAdmin())
-            <a href="{{ route('orders.create') }}" class="bg-indigo-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                Nueva Orden
-            </a>
-            @endif
-        </div>
-
-        @if(session('success'))
-        <div class="rounded-md bg-green-50 p-4 mb-6">
-            <div class="flex">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <p class="text-sm font-medium text-green-800">
-                        {{ session('success') }}
-                    </p>
-                </div>
-            </div>
-        </div>
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-800">
+            {{ auth()->user()->isAdmin() ? 'Todas las Órdenes' : 'Mis Órdenes' }}
+        </h2>
+        @if(!auth()->user()->isAdmin())
+        <a href="{{ route('orders.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+            Nueva Orden
+        </a>
         @endif
+    </div>
 
-        <div class="bg-white shadow overflow-hidden sm:rounded-md">
-            <ul class="divide-y divide-gray-200">
-                @forelse($orders as $order)
-                <li>
-                    <div class="px-4 py-4 sm:px-6">
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-indigo-600 truncate">
-                                    Orden #{{ $order->id }}
-                                    @if(auth()->user()->isAdmin())
-                                    - {{ $order->user->name }}
-                                    @endif
-                                </p>
-                                <p class="mt-2 text-sm text-gray-600">
-                                    {{ $order->description }}
-                                </p>
-                            </div>
-                            <div class="ml-4 flex-shrink-0 flex items-center space-x-4">
-                                <div class="flex flex-col items-end">
-                                    <p class="text-sm text-gray-500">Cantidad: {{ $order->quantity }}</p>
-                                    <p class="text-sm text-gray-500">Precio unitario: ${{ number_format($order->unit_price, 2) }}</p>
-                                    <p class="text-lg font-bold text-gray-900">Total: ${{ number_format($order->total_amount, 2) }}</p>
-                                </div>
-                                <div class="flex flex-col items-end">
-                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
-                                        {{ $order->status === 'pending' ? 'bg-yellow-100 text-yellow-800' : '' }}
-                                        {{ $order->status === 'approved' ? 'bg-green-100 text-green-800' : '' }}
-                                        {{ $order->status === 'declined' ? 'bg-red-100 text-red-800' : '' }}">
-                                        {{ ucfirst($order->status) }}
-                                    </span>
-                                    @if($order->admin_comments)
-                                    <p class="mt-1 text-sm text-gray-500">{{ $order->admin_comments }}</p>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
+    @if(session('success'))
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ session('success') }}</span>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <span class="block sm:inline">{{ session('error') }}</span>
+    </div>
+    @endif
+
+    <div class="bg-white shadow-md rounded my-6">
+        <table class="min-w-full table-auto " style="
+    width: 100%;
+">
+            <thead>
+                <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                    <th class="py-3 px-6 text-left">Descripción</th>
+                    <th class="py-3 px-6 text-left">Precio Unitario</th>
+                    <th class="py-3 px-6 text-left">Cantidad</th>
+                    <th class="py-3 px-6 text-left">Total</th>
+                    <th class="py-3 px-6 text-left">Estado</th>
+                    <th class="py-3 px-6 text-left">Fecha Creación</th>
+                    @if(auth()->user()->isAdmin())
+                    <th class="py-3 px-6 text-left">Usuario</th>
+                    @endif
+                    <th class="py-3 px-6 text-left">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-600 text-sm font-light">
+                @foreach($orders as $order)
+                <tr class="border-b border-gray-200 hover:bg-gray-100">
+                    <td class="py-3 px-6 text-left">{{ $order->description }}</td>
+                    <td class="py-3 px-6 text-left">${{ number_format($order->unit_price, 2) }}</td>
+                    <td class="py-3 px-6 text-left">{{ $order->quantity }}</td>
+                    <td class="py-3 px-6 text-left">${{ number_format($order->total_amount, 2) }}</td>
+                    <td class="py-3 px-6 text-left">
+                        <span class="@if($order->status === 'pending') text-yellow-600 @elseif($order->status === 'approved') text-green-600 @else text-red-600 @endif">
+                            {{ ucfirst($order->status) }}
+                        </span>
+                    </td>
+                    <td class="py-3 px-6 text-left">{{ $order->created_at->format('d/m/Y H:i') }}</td>
+                    @if(auth()->user()->isAdmin())
+                    <td class="py-3 px-6 text-left">{{ $order->user->name }}</td>
+                    @endif
+                    <td class="py-3 px-6 text-left">
+                        @if($order->status === 'pending')
+                            @if(auth()->user()->isAdmin() || auth()->id() === $order->user_id)
+                            <a href="{{ route('orders.edit', $order) }}" class="text-blue-600 hover:text-blue-900 mr-2">
+                                Editar
+                            </a>
+                            @endif
+                        @endif
+
                         @if(auth()->user()->isAdmin() && $order->status === 'pending')
                         <div class="mt-4 flex justify-end space-x-3">
                             <form action="{{ route('orders.update-status', $order) }}" method="POST" class="inline">
@@ -95,15 +96,17 @@
                             </form>
                         </div>
                         @endif
-                    </div>
-                </li>
-                @empty
-                <li class="px-4 py-4 sm:px-6 text-center text-gray-500">
-                    No hay órdenes para mostrar.
-                </li>
-                @endforelse
-            </ul>
-        </div>
+
+                        @if($order->admin_comments)
+                        <div class="mt-2 text-sm text-gray-500">
+                            <strong>Comentarios:</strong> {{ $order->admin_comments }}
+                        </div>
+                        @endif
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
     </div>
 </div>
 @endsection

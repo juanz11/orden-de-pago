@@ -35,6 +35,37 @@ class OrderController extends Controller
             ->with('success', 'Orden creada exitosamente.');
     }
 
+    public function edit(Order $order)
+    {
+        if (!auth()->user()->isAdmin() && auth()->id() !== $order->user_id) {
+            abort(403, 'No tienes permiso para editar esta orden.');
+        }
+
+        return view('orders.edit', compact('order'));
+    }
+
+    public function update(Request $request, Order $order)
+    {
+        if (!auth()->user()->isAdmin() && auth()->id() !== $order->user_id) {
+            abort(403, 'No tienes permiso para editar esta orden.');
+        }
+
+        if ($order->status !== 'pending') {
+            return back()->with('error', 'No se puede editar una orden que ya ha sido aprobada o rechazada.');
+        }
+
+        $validated = $request->validate([
+            'description' => 'required|string',
+            'unit_price' => 'required|numeric|min:0',
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        $order->update($validated);
+
+        return redirect()->route('orders.index')
+            ->with('success', 'Orden actualizada exitosamente.');
+    }
+
     public function updateStatus(Order $order, Request $request)
     {
         if (!auth()->user()->isAdmin()) {
