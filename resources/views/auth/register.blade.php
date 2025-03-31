@@ -11,7 +11,7 @@
         <div class="max-w-md w-full space-y-8 bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-lg">
             <div>
                 <div class="flex justify-center">
-                    <img src="https://sncpharma.com/images/logo/1.png" alt="Logo" class="h-32">
+                    <img src="https://muestras.sncpharma.com/images/logo/1.png" alt="Logo" class="h-32">
                 </div>
                 <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
                     Crear una cuenta
@@ -37,17 +37,22 @@
                     </div>
 
                     <div class="mb-4">
-                        <label for="cedula" class="block text-sm font-medium text-gray-700">Cédula</label>
-                        <input id="cedula" name="cedula" type="text" required class="mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value="{{ old('cedula') }}">
-                        @error('cedula')
-                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <div class="mb-4">
-                        <label for="departamento" class="block text-sm font-medium text-gray-700">Departamento</label>
-                        <input id="departamento" name="departamento" type="text" required class="mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" value="{{ old('departamento') }}">
-                        @error('departamento')
+                        <label for="department" class="block text-sm font-medium text-gray-700">Departamento</label>
+                        <select id="department" name="department" required class="mt-1 appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">Seleccionar departamento</option>
+                            <option value="RECURSOS HUMANOS" {{ old('department') == 'RECURSOS HUMANOS' ? 'selected' : '' }}>RECURSOS HUMANOS</option>
+                            <option value="PRESIDENCIA" {{ old('department') == 'PRESIDENCIA' ? 'selected' : '' }}>PRESIDENCIA</option>
+                            <option value="ADMINISTRACIÓN" {{ old('department') == 'ADMINISTRACIÓN' ? 'selected' : '' }}>ADMINISTRACIÓN</option>
+                            <option value="COMERCIAL" {{ old('department') == 'COMERCIAL' ? 'selected' : '' }}>COMERCIAL</option>
+                            <option value="MERCADEO" {{ old('department') == 'MERCADEO' ? 'selected' : '' }}>MERCADEO</option>
+                            <option value="CONSULTORÍA JURÍDICA" {{ old('department') == 'CONSULTORÍA JURÍDICA' ? 'selected' : '' }}>CONSULTORÍA JURÍDICA</option>
+                            <option value="LOGÍSTICA Y ALMACÉN" {{ old('department') == 'LOGÍSTICA Y ALMACÉN' ? 'selected' : '' }}>LOGÍSTICA Y ALMACÉN</option>
+                            <option value="SERVICIOS GENERALES" {{ old('department') == 'SERVICIOS GENERALES' ? 'selected' : '' }}>SERVICIOS GENERALES</option>
+                            <option value="MENTE Y SALUD" {{ old('department') == 'MENTE Y SALUD' ? 'selected' : '' }}>MENTE Y SALUD</option>
+                            <option value="TECNOLOGÍA DE LA INFORMACIÓN" {{ old('department') == 'TECNOLOGÍA DE LA INFORMACIÓN' ? 'selected' : '' }}>TECNOLOGÍA DE LA INFORMACIÓN</option>
+                            <option value="FINANZAS" {{ old('department') == 'FINANZAS' ? 'selected' : '' }}>FINANZAS</option>
+                        </select>
+                        @error('department')
                             <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

@@ -21,16 +21,15 @@ class RegisterController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
-            'cedula' => 'required|string|max:20',
-            'departamento' => 'required|string|max:100',
+            'department' => 'required|string|max:100',
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'cedula' => $request->cedula,
-            'departamento' => $request->departamento,
+            'department' => $request->department,
+            'role' => 'guest',
         ]);
 
         Auth::login($user);
