@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules;
 
 class UserController extends Controller
 {
@@ -22,14 +23,14 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-            'department' => 'required|string|max:100',
-            'role' => 'required|in:guest,admin,superadmin',
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'department' => ['required', 'string', 'in:contabilidad,recursos humanos,administracion,ventas,compras'],
+            'role' => ['required', 'string', 'in:user,admin,superadmin'],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
@@ -37,7 +38,8 @@ class UserController extends Controller
             'role' => $request->role,
         ]);
 
-        return redirect()->route('users.index')->with('success', 'Usuario creado exitosamente.');
+        return redirect()->route('users.index')
+            ->with('success', 'Usuario creado exitosamente.');
     }
 
     public function edit(User $user)
@@ -48,35 +50,39 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'department' => 'required|string|max:100',
-            'role' => 'required|in:guest,admin,superadmin',
-        ]);
-
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-            'department' => $request->department,
-            'role' => $request->role,
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'department' => ['required', 'string', 'in:contabilidad,recursos humanos,administracion,ventas,compras'],
+            'role' => ['required', 'string', 'in:user,admin,superadmin'],
         ]);
 
         if ($request->filled('password')) {
             $request->validate([
-                'password' => 'required|string|min:8|confirmed',
+                'password' => ['confirmed', Rules\Password::defaults()],
             ]);
-
-            $user->update([
-                'password' => Hash::make($request->password),
-            ]);
+            
+            $user->password = Hash::make($request->password);
         }
 
-        return redirect()->route('users.index')->with('success', 'Usuario actualizado exitosamente.');
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->department = $request->department;
+        $user->role = $request->role;
+        $user->save();
+
+        return redirect()->route('users.index')
+            ->with('success', 'Usuario actualizado exitosamente.');
     }
 
     public function destroy(User $user)
     {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'No puedes eliminar tu propio usuario.');
+        }
+
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'Usuario eliminado exitosamente.');
+
+        return redirect()->route('users.index')
+            ->with('success', 'Usuario eliminado exitosamente.');
     }
 }
