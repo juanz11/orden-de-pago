@@ -6,19 +6,18 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class CheckRole
+class AdminMiddleware
 {
     /**
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \Closure  $next
-     * @param  string  $role
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return mixed
      */
-    public function handle(Request $request, Closure $next, string $role): Response
+    public function handle(Request $request, Closure $next): Response
     {
-        if (!$request->user() || $request->user()->role !== $role) {
+        if (!auth()->check() || !auth()->user()->isAdmin()) {
             abort(403, 'Acceso no autorizado.');
         }
 

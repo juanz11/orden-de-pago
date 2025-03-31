@@ -9,11 +9,14 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = auth()->user()->isAdmin() 
-            ? Order::with('user')->latest()->get()
-            : auth()->user()->orders()->latest()->get();
-
+        $orders = auth()->user()->orders()->latest()->get();
         return view('orders.index', compact('orders'));
+    }
+
+    public function adminIndex()
+    {
+        $orders = Order::with('user')->latest()->get();
+        return view('orders.admin', compact('orders'));
     }
 
     public function create()
