@@ -61,11 +61,11 @@
                                     ${{ number_format($order->unit_price * $order->quantity, 2) }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5">
-                                    @if($order->status === 'pending')
+                                    @if($order->status === 'pendiente')
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                             Pendiente
                                         </span>
-                                    @elseif($order->status === 'approved')
+                                    @elseif($order->status === 'aprobado')
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                                             Aprobada
                                         </span>
@@ -77,7 +77,7 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
                                     <div class="flex space-x-2">
-                                        @if($order->status === 'pending')
+                                        @if($order->status === 'pendiente')
                                             <a href="{{ route('orders.edit', $order) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
                                                 <svg class="h-5 w-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
@@ -87,12 +87,12 @@
 
                                             <form action="{{ route('orders.update-status', $order) }}" method="POST" class="inline">
                                                 @csrf
-                                                <input type="hidden" name="status" value="approved">
+                                                <input type="hidden" name="status" value="aprobado">
                                                 <button type="submit" class="text-green-600 hover:text-green-900">Aprobar</button>
                                             </form>
                                             <form action="{{ route('orders.update-status', $order) }}" method="POST" class="inline">
                                                 @csrf
-                                                <input type="hidden" name="status" value="declined">
+                                                <input type="hidden" name="status" value="rechazado">
                                                 <button type="submit" class="text-red-600 hover:text-red-900">Rechazar</button>
                                             </form>
                                         @else

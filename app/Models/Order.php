@@ -22,6 +22,10 @@ class Order extends Model
         'other_supplier',
     ];
 
+    const STATUS_PENDING = 'pendiente';
+    const STATUS_APPROVED = 'aprobado';
+    const STATUS_DECLINED = 'rechazado';
+
     protected static function boot()
     {
         parent::boot();
@@ -49,16 +53,16 @@ class Order extends Model
 
     public function isPending()
     {
-        return $this->status === 'pending';
+        return $this->status === self::STATUS_PENDING;
     }
 
     public function isApproved()
     {
-        return $this->status === 'approved';
+        return $this->status === self::STATUS_APPROVED;
     }
 
     public function isDeclined()
     {
-        return $this->status === 'declined';
+        return $this->status === self::STATUS_DECLINED;
     }
 }

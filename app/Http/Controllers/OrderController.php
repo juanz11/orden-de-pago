@@ -37,6 +37,7 @@ class OrderController extends Controller
             'other_supplier' => 'required_without:supplier_id|nullable|string',
         ]);
 
+        $validated['status'] = Order::STATUS_PENDING;
         $order = auth()->user()->orders()->create($validated);
 
         return redirect()->route('orders.index')
@@ -59,7 +60,7 @@ class OrderController extends Controller
             abort(403, 'No tienes permiso para editar esta orden.');
         }
 
-        if ($order->status !== 'pending') {
+        if ($order->status !== Order::STATUS_PENDING) {
             return back()->with('error', 'No se puede editar una orden que ya ha sido aprobada o rechazada.');
         }
 
@@ -89,7 +90,7 @@ class OrderController extends Controller
         }
 
         $validated = $request->validate([
-            'status' => 'required|in:approved,declined',
+            'status' => 'required|in:' . Order::STATUS_APPROVED . ',' . Order::STATUS_DECLINED,
             'admin_comments' => 'nullable|string',
         ]);
 
