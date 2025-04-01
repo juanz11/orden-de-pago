@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
+use App\Models\Supplier;
 
 class Order extends Model
 {
@@ -17,6 +18,8 @@ class Order extends Model
         'total_amount',
         'status',
         'admin_comments',
+        'supplier_id',
+        'other_supplier',
     ];
 
     protected static function boot()
@@ -37,6 +40,11 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function supplier()
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function isPending()

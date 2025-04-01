@@ -22,6 +22,38 @@
                         @enderror
                     </div>
 
+                    <div>
+                        <label for="supplier_id" class="block text-sm font-medium text-gray-700">
+                            Proveedor
+                        </label>
+                        <select id="supplier_id" name="supplier_id" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            onchange="toggleOtherSupplier()">
+                            <option value="">Seleccione un proveedor</option>
+                            @foreach($suppliers as $supplier)
+                                <option value="{{ $supplier->id }}" {{ old('supplier_id') == $supplier->id ? 'selected' : '' }}>
+                                    {{ $supplier->name }}
+                                </option>
+                            @endforeach
+                            <option value="other" {{ old('supplier_id') == 'other' ? 'selected' : '' }}>Otro</option>
+                        </select>
+                        @error('supplier_id')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div id="other_supplier_div" style="display: none;">
+                        <label for="other_supplier" class="block text-sm font-medium text-gray-700">
+                            Especifique el Proveedor
+                        </label>
+                        <input type="text" id="other_supplier" name="other_supplier"
+                            value="{{ old('other_supplier') }}"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        @error('other_supplier')
+                            <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                         <div>
                             <label for="unit_price" class="block text-sm font-medium text-gray-700">
@@ -81,5 +113,27 @@ function calculateTotal() {
 
 // Calculate initial total
 calculateTotal();
+</script>
+
+<script>
+    function toggleOtherSupplier() {
+        const supplierSelect = document.getElementById('supplier_id');
+        const otherSupplierDiv = document.getElementById('other_supplier_div');
+        const otherSupplierInput = document.getElementById('other_supplier');
+        
+        if (supplierSelect.value === 'other') {
+            otherSupplierDiv.style.display = 'block';
+            otherSupplierInput.required = true;
+        } else {
+            otherSupplierDiv.style.display = 'none';
+            otherSupplierInput.required = false;
+            otherSupplierInput.value = '';
+        }
+    }
+
+    // Ejecutar al cargar la página para manejar valores antiguos
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleOtherSupplier();
+    });
 </script>
 @endsection

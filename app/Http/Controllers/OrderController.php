@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 
 class OrderController extends Controller
@@ -15,13 +16,14 @@ class OrderController extends Controller
 
     public function adminIndex()
     {
-        $orders = Order::with('user')->latest()->get();
+        $orders = Order::with(['user', 'supplier'])->latest()->get();
         return view('orders.admin', compact('orders'));
     }
 
     public function create()
     {
-        return view('orders.create');
+        $suppliers = Supplier::all();
+        return view('orders.create', compact('suppliers'));
     }
 
     public function store(Request $request)
@@ -30,6 +32,8 @@ class OrderController extends Controller
             'description' => 'required|string',
             'unit_price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'other_supplier' => 'required_without:supplier_id|nullable|string',
         ]);
 
         $order = auth()->user()->orders()->create($validated);
