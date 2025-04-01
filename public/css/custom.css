@@ -1,0 +1,14 @@
+.absolute {
+    position: relative !important;
+}
+
+.item-entry {
+    padding-right: 2.5rem !important;
+}
+
+.remove-item-btn {
+    position: absolute !important;
+    right: 0.5rem !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+}

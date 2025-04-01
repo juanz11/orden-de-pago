@@ -6,10 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
 use App\Models\Supplier;
+use App\Models\OrderItem;
 
 class Order extends Model
 {
     use HasFactory;
+
+    const STATUS_PENDING = 'pendiente';
+    const STATUS_APPROVED = 'aprobado';
+    const STATUS_DECLINED = 'rechazado';
 
     protected $fillable = [
         'description',
@@ -20,11 +25,9 @@ class Order extends Model
         'admin_comments',
         'supplier_id',
         'other_supplier',
+        'user_id',
+        'total'
     ];
-
-    const STATUS_PENDING = 'pendiente';
-    const STATUS_APPROVED = 'aprobado';
-    const STATUS_DECLINED = 'rechazado';
 
     protected static function boot()
     {
@@ -39,6 +42,12 @@ class Order extends Model
                 $order->total_amount = $order->unit_price * $order->quantity;
             }
         });
+
+        static::saving(function ($order) {
+            if ($order->items()->exists()) {
+                $order->total = $order->items()->sum('total');
+            }
+        });
     }
 
     public function user()
@@ -49,6 +58,11 @@ class Order extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
     }
 
     public function isPending()

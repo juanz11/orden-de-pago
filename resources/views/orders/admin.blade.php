@@ -14,35 +14,33 @@
                 @endif
 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full bg-white" style="
-    width: 100%;
-">
-                        <thead class="bg-gray-100" >
+                    <table class="min-w-full bg-white">
+                        <thead class="bg-gray-100">
                             <tr>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                 <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
                                 <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Descripción</th>
                                 <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Monto por Unidad</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Monto Total</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Productos</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Total</th>
                                 <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                                 <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($orders as $order)
                             <tr>
-                                <td class="px-6 py-4 whitespace-no-wrap">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    {{ $order->id }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     {{ $order->user->name }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-no-wrap">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     {{ $order->user->department }}
                                 </td>
-                                <td class="px-6 py-4">
-                                    {{ $order->description }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-no-wrap">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     @if($order->supplier)
                                         {{ $order->supplier->name }}
                                     @elseif($order->other_supplier)
@@ -51,56 +49,68 @@
                                         <span class="text-gray-500">No especificado</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
-                                    {{ $order->quantity }}
+                                <td class="px-6 py-4 text-sm">
+                                    <div class="space-y-2">
+                                        @foreach($order->items as $item)
+                                        <div>
+                                            <div class="font-medium">{{ $item->description }}</div>
+                                            <div class="text-gray-500">
+                                                {{ $item->quantity }} x ${{ number_format($item->unit_price, 2) }}
+                                                <span class="text-gray-400">
+                                                    = ${{ number_format($item->total, 2) }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
-                                    ${{ number_format($order->unit_price, 2) }}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    ${{ number_format($order->total, 2) }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-900">
-                                    ${{ number_format($order->unit_price * $order->quantity, 2) }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     @if($order->status === 'pendiente')
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                             Pendiente
                                         </span>
                                     @elseif($order->status === 'aprobado')
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                            Aprobada
+                                            Aprobado
                                         </span>
                                     @else
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                            Rechazada
+                                            Rechazado
                                         </span>
                                     @endif
+                                    @if($order->admin_comments)
+                                        <p class="text-xs text-gray-500 mt-1">{{ $order->admin_comments }}</p>
+                                    @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
-                                    <div class="flex space-x-2">
-                                        @if($order->status === 'pendiente')
-                                            <a href="{{ route('orders.edit', $order) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
-                                                <svg class="h-5 w-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                                </svg>
-                                                Editar
-                                            </a>
-
-                                            <form action="{{ route('orders.update-status', $order) }}" method="POST" class="inline">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    {{ $order->created_at->format('d/m/Y H:i') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    @if($order->status === 'pendiente')
+                                        <div class="space-y-2">
+                                            <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex items-center space-x-2">
                                                 @csrf
                                                 <input type="hidden" name="status" value="aprobado">
-                                                <button type="submit" class="text-green-600 hover:text-green-900">Aprobar</button>
+                                                <input type="text" name="admin_comments" placeholder="Comentarios"
+                                                    class="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                                <button type="submit" class="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">
+                                                    Aprobar
+                                                </button>
                                             </form>
-                                            <form action="{{ route('orders.update-status', $order) }}" method="POST" class="inline">
+                                            <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex items-center space-x-2">
                                                 @csrf
                                                 <input type="hidden" name="status" value="rechazado">
-                                                <button type="submit" class="text-red-600 hover:text-red-900">Rechazar</button>
+                                                <input type="text" name="admin_comments" placeholder="Comentarios"
+                                                    class="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                                <button type="submit" class="bg-red-600 text-white text-xs px-2 py-1 rounded hover:bg-red-700">
+                                                    Rechazar
+                                                </button>
                                             </form>
-                                        @else
-                                            @if($order->admin_comments)
-                                                <span class="text-gray-600">{{ $order->admin_comments }}</span>
-                                            @endif
-                                        @endif
-                                    </div>
+                                        </div>
+                                    @endif
                                 </td>
                             </tr>
                             @endforeach
