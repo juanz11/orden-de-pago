@@ -21,13 +21,27 @@ Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->na
 Route::post('/register', [RegisterController::class, 'register']);
 
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/dashboard', function () {
+            return view('dashboard');
+        })->name('dashboard');
 
-    Route::resource('orders', OrderController::class);
-    Route::post('/orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
-    Route::get('/admin/orders', [OrderController::class, 'adminIndex'])->name('orders.admin')->middleware('can:admin');
-    Route::resource('users', UserController::class)->middleware('can:superadmin');
-    Route::resource('suppliers', SupplierController::class)->middleware('can:admin');
+        // Rutas de órdenes para todos los usuarios
+        Route::resource('orders', OrderController::class);
+        Route::post('/orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+
+        // Rutas de proveedores para todos los usuarios (excepto delete)
+        Route::resource('suppliers', SupplierController::class)->except(['destroy']);
+
+        // Rutas solo para administradores
+        Route::middleware(['can:admin'])->group(function () {
+            Route::get('/admin/orders', [OrderController::class, 'adminIndex'])->name('orders.admin');
+            Route::get('users', [UserController::class, 'index'])->name('users.index');
+            Route::get('users/create', [UserController::class, 'create'])->name('users.create');
+            Route::post('users', [UserController::class, 'store'])->name('users.store');
+            Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+            // Ruta de eliminación de proveedores solo para admins
+            Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
+        });
+    });
 });

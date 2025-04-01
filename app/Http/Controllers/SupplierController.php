@@ -53,6 +53,10 @@ class SupplierController extends Controller
 
     public function destroy(Supplier $supplier)
     {
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'No tienes permiso para eliminar proveedores.');
+        }
+
         $supplier->delete();
         return redirect()->route('suppliers.index')
             ->with('success', 'Proveedor eliminado exitosamente.');

@@ -33,8 +33,8 @@ class OrderController extends Controller
             'description' => 'required|string',
             'unit_price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'other_supplier' => 'required_without:supplier_id|nullable|string',
+            'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
+            'other_supplier' => 'nullable|string|required_without:supplier_id',
         ]);
 
         $validated['status'] = Order::STATUS_PENDING;
@@ -68,8 +68,8 @@ class OrderController extends Controller
             'description' => 'required|string',
             'unit_price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
-            'supplier_id' => 'nullable|exists:suppliers,id',
-            'other_supplier' => 'required_without:supplier_id|nullable|string',
+            'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
+            'other_supplier' => 'nullable|string|required_without:supplier_id',
         ]);
 
         $order->update($validated);
