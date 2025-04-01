@@ -36,9 +36,12 @@ Route::middleware(['auth'])->group(function () {
         // Rutas solo para administradores
         Route::middleware(['can:admin'])->group(function () {
             Route::get('/admin/orders', [OrderController::class, 'adminIndex'])->name('orders.admin');
+            // Rutas de usuarios
             Route::get('users', [UserController::class, 'index'])->name('users.index');
             Route::get('users/create', [UserController::class, 'create'])->name('users.create');
             Route::post('users', [UserController::class, 'store'])->name('users.store');
+            Route::get('users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+            Route::put('users/{user}', [UserController::class, 'update'])->name('users.update');
             Route::delete('users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
             // Ruta de eliminación de proveedores solo para admins
             Route::delete('suppliers/{supplier}', [SupplierController::class, 'destroy'])->name('suppliers.destroy');
