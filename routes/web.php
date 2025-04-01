@@ -26,6 +26,7 @@ Route::middleware(['auth'])->group(function () {
     })->name('dashboard');
 
     Route::resource('orders', OrderController::class);
+    Route::post('/orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
     Route::get('/admin/orders', [OrderController::class, 'adminIndex'])->name('orders.admin')->middleware('can:admin');
     Route::resource('users', UserController::class)->middleware('can:superadmin');
     Route::resource('suppliers', SupplierController::class)->middleware('can:admin');
