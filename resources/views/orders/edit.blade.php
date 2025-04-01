@@ -38,6 +38,45 @@
                 </div>
 
                 <div class="mb-4">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="supplier_id">
+                        Proveedor
+                    </label>
+                    <select
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('supplier_id') border-red-500 @enderror"
+                        id="supplier_id"
+                        name="supplier_id"
+                        onchange="toggleOtherSupplier()"
+                    >
+                        <option value="">Seleccione un proveedor</option>
+                        @foreach($suppliers as $supplier)
+                            <option value="{{ $supplier->id }}" {{ old('supplier_id', $order->supplier_id) == $supplier->id ? 'selected' : '' }}>
+                                {{ $supplier->name }}
+                            </option>
+                        @endforeach
+                        <option value="other" {{ old('supplier_id') == 'other' || (!$order->supplier_id && $order->other_supplier) ? 'selected' : '' }}>Otro</option>
+                    </select>
+                    @error('supplier_id')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div id="other_supplier_div" class="mb-4" style="display: none;">
+                    <label class="block text-gray-700 text-sm font-bold mb-2" for="other_supplier">
+                        Especifique el Proveedor
+                    </label>
+                    <input
+                        class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('other_supplier') border-red-500 @enderror"
+                        id="other_supplier"
+                        type="text"
+                        name="other_supplier"
+                        value="{{ old('other_supplier', $order->other_supplier) }}"
+                    >
+                    @error('other_supplier')
+                    <p class="text-red-500 text-xs italic">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="mb-4">
                     <label class="block text-gray-700 text-sm font-bold mb-2" for="unit_price">
                         Precio Unitario
                     </label>
@@ -81,4 +120,26 @@
         </div>
     </div>
 </div>
+
+<script>
+    function toggleOtherSupplier() {
+        const supplierSelect = document.getElementById('supplier_id');
+        const otherSupplierDiv = document.getElementById('other_supplier_div');
+        const otherSupplierInput = document.getElementById('other_supplier');
+        
+        if (supplierSelect.value === 'other') {
+            otherSupplierDiv.style.display = 'block';
+            otherSupplierInput.required = true;
+        } else {
+            otherSupplierDiv.style.display = 'none';
+            otherSupplierInput.required = false;
+            otherSupplierInput.value = '';
+        }
+    }
+
+    // Ejecutar al cargar la página para manejar valores antiguos
+    document.addEventListener('DOMContentLoaded', function() {
+        toggleOtherSupplier();
+    });
+</script>
 @endsection

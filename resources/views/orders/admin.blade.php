@@ -76,24 +76,31 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-no-wrap text-sm leading-5 text-gray-500">
-                                    @if($order->status === 'pending')
                                     <div class="flex space-x-2">
-                                        <form action="{{ route('orders.update-status', $order) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="hidden" name="status" value="approved">
-                                            <button type="submit" class="text-green-600 hover:text-green-900">Aprobar</button>
-                                        </form>
-                                        <form action="{{ route('orders.update-status', $order) }}" method="POST" class="inline">
-                                            @csrf
-                                            @method('PATCH')
-                                            <input type="hidden" name="status" value="declined">
-                                            <button type="submit" class="text-red-600 hover:text-red-900">Rechazar</button>
-                                        </form>
+                                        @if($order->status === 'pending')
+                                            <a href="{{ route('orders.edit', $order) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                                                <svg class="h-5 w-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                </svg>
+                                                Editar
+                                            </a>
+
+                                            <form action="{{ route('orders.update-status', $order) }}" method="POST" class="inline">
+                                                @csrf
+                                                <input type="hidden" name="status" value="approved">
+                                                <button type="submit" class="text-green-600 hover:text-green-900">Aprobar</button>
+                                            </form>
+                                            <form action="{{ route('orders.update-status', $order) }}" method="POST" class="inline">
+                                                @csrf
+                                                <input type="hidden" name="status" value="declined">
+                                                <button type="submit" class="text-red-600 hover:text-red-900">Rechazar</button>
+                                            </form>
+                                        @else
+                                            @if($order->admin_comments)
+                                                <span class="text-gray-600">{{ $order->admin_comments }}</span>
+                                            @endif
+                                        @endif
                                     </div>
-                                    @else
-                                        <span class="text-gray-500">{{ $order->admin_comments ?? 'Sin comentarios' }}</span>
-                                    @endif
                                 </td>
                             </tr>
                             @endforeach

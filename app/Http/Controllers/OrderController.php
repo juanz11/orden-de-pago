@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class OrderController extends Controller
 {
@@ -44,16 +45,17 @@ class OrderController extends Controller
 
     public function edit(Order $order)
     {
-        if (!auth()->user()->isAdmin() && auth()->id() !== $order->user_id) {
+        if (!Gate::allows('update', $order)) {
             abort(403, 'No tienes permiso para editar esta orden.');
         }
-
-        return view('orders.edit', compact('order'));
+        
+        $suppliers = Supplier::all();
+        return view('orders.edit', compact('order', 'suppliers'));
     }
 
     public function update(Request $request, Order $order)
     {
-        if (!auth()->user()->isAdmin() && auth()->id() !== $order->user_id) {
+        if (!Gate::allows('update', $order)) {
             abort(403, 'No tienes permiso para editar esta orden.');
         }
 
@@ -65,9 +67,16 @@ class OrderController extends Controller
             'description' => 'required|string',
             'unit_price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:1',
+            'supplier_id' => 'nullable|exists:suppliers,id',
+            'other_supplier' => 'required_without:supplier_id|nullable|string',
         ]);
 
         $order->update($validated);
+
+        if (auth()->user()->isAdmin()) {
+            return redirect()->route('orders.admin')
+                ->with('success', 'Orden actualizada exitosamente.');
+        }
 
         return redirect()->route('orders.index')
             ->with('success', 'Orden actualizada exitosamente.');
@@ -86,7 +95,7 @@ class OrderController extends Controller
 
         $order->update($validated);
 
-        return redirect()->route('orders.index')
+        return redirect()->route('orders.admin')
             ->with('success', 'Estado de la orden actualizado exitosamente.');
     }
 }
