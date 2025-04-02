@@ -57,10 +57,7 @@
                                         <div>
                                             <div class="font-medium">{{ $item->description }}</div>
                                             <div class="text-gray-500">
-                                                {{ $item->quantity }} x ${{ number_format($item->unit_price, 2) }}
-                                                <span class="text-gray-400">
-                                                    = ${{ number_format($item->total, 2) }}
-                                                </span>
+                                                Cantidad: {{ $item->quantity }}
                                             </div>
                                         </div>
                                         @endforeach
