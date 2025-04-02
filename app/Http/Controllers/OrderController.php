@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class OrderController extends Controller
 {
@@ -98,31 +99,31 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
         ]);
 
-        $order->update([
-            'supplier_id' => $request->supplier_id !== 'otro' ? $request->supplier_id : null,
-            'other_supplier' => $request->supplier_id === 'otro' ? $request->other_supplier : null,
-        ]);
-
-        $order->items()->delete();
-
-        foreach ($request->items as $item) {
-            $order->items()->create([
-                'description' => $item['description'],
-                'unit_price' => $item['unit_price'],
-                'quantity' => $item['quantity']
+        DB::beginTransaction();
+        try {
+            $order->update([
+                'supplier_id' => $request->supplier_id !== 'otro' ? $request->supplier_id : null,
+                'other_supplier' => $request->supplier_id === 'otro' ? $request->other_supplier : null,
             ]);
+
+            // Eliminar items existentes
+            $order->items()->delete();
+
+            // Crear nuevos items
+            foreach ($request->items as $item) {
+                $order->items()->create([
+                    'description' => $item['description'],
+                    'unit_price' => $item['unit_price'],
+                    'quantity' => $item['quantity']
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('orders.index')->with('success', 'Orden actualizada exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Error al actualizar la orden. Por favor, intente nuevamente.');
         }
-
-        // El total se calcula automáticamente por el modelo
-        $order->save();
-
-        if (auth()->user()->isAdmin()) {
-            return redirect()->route('orders.admin')
-                ->with('success', 'Orden actualizada exitosamente.');
-        }
-
-        return redirect()->route('orders.index')
-            ->with('success', 'Orden actualizada exitosamente.');
     }
 
     public function updateStatus(Request $request, Order $order)
