@@ -26,7 +26,9 @@
     @endif
 
     <div class="bg-white shadow-md rounded my-6">
-        <table class="min-w-full table-auto">
+        <table class="min-w-full table-auto" style="
+    width: 100%;
+">
             <thead>
                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                     <th class="py-3 px-6 text-left">#</th>
