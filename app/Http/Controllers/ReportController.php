@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Barryvdh\DomPDF\Facade as PDF;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 
 class ReportController extends Controller
@@ -47,7 +47,7 @@ class ReportController extends Controller
         ];
 
         if ($request->format === 'pdf') {
-            $pdf = PDF::loadView('reports.pdf', $data);
+            $pdf = Pdf::loadView('reports.pdf', $data);
             return $pdf->download('reporte-ordenes.pdf');
         }
 
