@@ -33,27 +33,30 @@
                     <!-- Navigation Links -->
                     <div class="hidden space-x-8 sm:-my-px sm:ml-10 sm:flex">
                         @auth
-                            <a href="{{ route('dashboard') }}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
+                            <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                                 Dashboard
-                            </a>
-                            <a href="{{ route('orders.create') }}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
-                                Nueva Orden
-                            </a>
-                            <a href="{{ route('orders.index') }}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
+                            </x-nav-link>
+                            <x-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.index')">
                                 Mis Órdenes
-                            </a>
-                            <a href="{{ route('suppliers.index') }}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
+                            </x-nav-link>
+                            <x-nav-link :href="route('orders.create')" :active="request()->routeIs('orders.create')">
+                                Nueva Orden
+                            </x-nav-link>
+                            <x-nav-link :href="route('suppliers.index')" :active="request()->routeIs('suppliers.*')">
                                 Proveedores
-                            </a>
+                            </x-nav-link>
                             @can('admin')
-                                <a href="{{ route('orders.admin') }}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
-                                    Gestionar Órdenes
-                                </a>
+                                <x-nav-link :href="route('orders.admin')" :active="request()->routeIs('orders.admin')">
+                                    Gestión de Órdenes
+                                </x-nav-link>
+                                <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                                    Reportes
+                                </x-nav-link>
                             @endcan
                             @can('superadmin')
-                                <a href="{{ route('users.index') }}" class="inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out">
-                                    Gestionar Usuarios
-                                </a>
+                                <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                                    Usuarios
+                                </x-nav-link>
                             @endcan
                         @endauth
                     </div>
@@ -92,27 +95,30 @@
         <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
             <div class="pt-2 pb-3 space-y-1">
                 @auth
-                    <a href="{{ route('dashboard') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out">
+                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         Dashboard
-                    </a>
-                    <a href="{{ route('orders.create') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out">
-                        Nueva Orden
-                    </a>
-                    <a href="{{ route('orders.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out">
+                    </x-nav-link>
+                    <x-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.index')">
                         Mis Órdenes
-                    </a>
-                    <a href="{{ route('suppliers.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out">
+                    </x-nav-link>
+                    <x-nav-link :href="route('orders.create')" :active="request()->routeIs('orders.create')">
+                        Nueva Orden
+                    </x-nav-link>
+                    <x-nav-link :href="route('suppliers.index')" :active="request()->routeIs('suppliers.*')">
                         Proveedores
-                    </a>
+                    </x-nav-link>
                     @can('admin')
-                        <a href="{{ route('orders.admin') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out">
-                            Gestionar Órdenes
-                        </a>
+                        <x-nav-link :href="route('orders.admin')" :active="request()->routeIs('orders.admin')">
+                            Gestión de Órdenes
+                        </x-nav-link>
+                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                            Reportes
+                        </x-nav-link>
                     @endcan
                     @can('superadmin')
-                        <a href="{{ route('users.index') }}" class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300 focus:outline-none focus:text-gray-800 focus:bg-gray-50 focus:border-gray-300 transition duration-150 ease-in-out">
-                            Gestionar Usuarios
-                        </a>
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                            Usuarios
+                        </x-nav-link>
                     @endcan
                 @endauth
             </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\ReportController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -32,6 +33,10 @@ Route::middleware(['auth'])->group(function () {
 
         // Rutas de proveedores para todos los usuarios (excepto delete)
         Route::resource('suppliers', SupplierController::class)->except(['destroy']);
+
+        // Rutas de reportes
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
 
         // Rutas solo para administradores
         Route::middleware(['can:admin'])->group(function () {
