@@ -59,14 +59,16 @@
                                         <div>
                                             <div class="font-medium">{{ $item->description }}</div>
                                             <div class="text-gray-500">
-                                                Cantidad: {{ $item->quantity }}
+                                                Cantidad: {{ $item->quantity }}<br>
+                                                Precio Unitario: <x-format-currency :amount="$item->unit_price" /><br>
+                                                Subtotal: <x-format-currency :amount="$item->quantity * $item->unit_price" />
                                             </div>
                                         </div>
                                         @endforeach
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    ${{ number_format($order->total, 2) }}
+                                    <x-format-currency :amount="$order->total" />
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     @if($order->status === 'pendiente')

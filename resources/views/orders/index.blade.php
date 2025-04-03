@@ -62,13 +62,15 @@
                             <div class="flex justify-between text-sm">
                                 <span class="font-medium">{{ $item->description }}</span>
                                 <span class="text-gray-500">
-                                    {{ $item->quantity }} x ${{ number_format($item->unit_price, 2) }}
+                                    {{ $item->quantity }} x <x-format-currency :amount="$item->unit_price" />
                                 </span>
                             </div>
                             @endforeach
                         </div>
                     </td>
-                    <td class="py-3 px-6 text-left font-medium">${{ number_format($order->total, 2) }}</td>
+                    <td class="py-3 px-6 text-left font-medium">
+                        <x-format-currency :amount="$order->total" />
+                    </td>
                     <td class="py-3 px-6 text-left">
                         <span class="@if($order->status === 'pendiente') text-yellow-600 @elseif($order->status === 'aprobado') text-green-600 @else text-red-600 @endif">
                             {{ ucfirst($order->status) }}

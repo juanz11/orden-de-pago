@@ -60,7 +60,7 @@
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Precio Unitario</label>
+                                        <label class="block text-sm font-medium text-gray-700">Precio Unitario (Bs.)</label>
                                         <input type="number" step="0.01" name="items[0][unit_price]" required
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                             onchange="calculateItemTotal(this)">
@@ -74,7 +74,8 @@
                                 </div>
                                 <div class="mt-2">
                                     <span class="text-sm font-medium text-gray-700">Total: </span>
-                                    <span class="item-total">0.00</span>
+                                    <span class="item-total">0,00</span>
+                                    <span class="text-sm text-gray-700"> Bs.</span>
                                 </div>
                             </div>
                         </div>
@@ -98,7 +99,8 @@
 
                         <div class="mt-4 text-right">
                             <span class="text-lg font-medium">Total General: </span>
-                            <span id="grand_total" class="text-lg font-bold">0.00</span>
+                            <span id="grand_total" class="text-lg font-bold">0,00</span>
+                            <span class="text-lg font-medium"> Bs.</span>
                         </div>
                     </div>
 
@@ -144,7 +146,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         const totalSpan = template.querySelector('.item-total');
-        totalSpan.textContent = '0.00';
+        totalSpan.textContent = new Intl.NumberFormat('es-VE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(0);
 
         document.getElementById('items_list').appendChild(template);
         itemCount++;
@@ -172,16 +177,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const quantity = parseInt(itemEntry.querySelector('input[name*="[quantity]"]').value) || 0;
         const total = unitPrice * quantity;
         
-        itemEntry.querySelector('.item-total').textContent = total.toFixed(2);
+        const formattedTotal = new Intl.NumberFormat('es-VE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(total);
+        
+        itemEntry.querySelector('.item-total').textContent = formattedTotal;
         calculateGrandTotal();
     };
 
     window.calculateGrandTotal = function() {
         const totals = Array.from(document.querySelectorAll('.item-total'))
-            .map(span => parseFloat(span.textContent) || 0);
+            .map(span => parseFloat(span.textContent.replace(/\./g, '').replace(',', '.')) || 0);
         
         const grandTotal = totals.reduce((sum, total) => sum + total, 0);
-        document.getElementById('grand_total').textContent = grandTotal.toFixed(2);
+        const formattedGrandTotal = new Intl.NumberFormat('es-VE', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }).format(grandTotal);
+        
+        document.getElementById('grand_total').textContent = formattedGrandTotal;
     };
 
     // Inicializar
