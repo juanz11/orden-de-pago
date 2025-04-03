@@ -21,7 +21,6 @@
 ">
                         <thead class="bg-gray-100">
                             <tr>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">ID</th>
                                 <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
                                 <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
                                 <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
@@ -35,9 +34,6 @@
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($orders as $order)
                             <tr>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    {{ $order->id }}
-                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     {{ $order->user->name }}
                                 </td>
