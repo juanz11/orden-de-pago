@@ -98,9 +98,15 @@
                         </div>
 
                         <div class="mt-4 text-right">
-                            <span class="text-lg font-medium">Total General: </span>
-                            <span id="grand_total" class="text-lg font-bold">0,00</span>
-                            <span class="text-lg font-medium"> Bs.</span>
+                            <div>
+                                <span class="text-lg font-medium">Total General: </span>
+                                <span id="grand_total" class="text-lg font-bold">0,00</span>
+                                <span class="text-lg font-medium"> Bs.</span>
+                            </div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                <span>Equivalente: $</span>
+                                <span id="dollar_total" class="font-medium">0.00</span>
+                            </div>
                         </div>
                     </div>
 
@@ -125,6 +131,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let itemCount = 1;
+    const bcvRate = parseFloat(document.querySelector('.exchange-rate-value')?.dataset?.rate || 0);
 
     window.toggleOtherSupplier = function(value) {
         const otherSupplierDiv = document.getElementById('other_supplier_div');
@@ -197,6 +204,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }).format(grandTotal);
         
         document.getElementById('grand_total').textContent = formattedGrandTotal;
+
+        // Calcular equivalente en dólares
+        if (bcvRate > 0) {
+            const dollarTotal = grandTotal / bcvRate;
+            const formattedDollarTotal = new Intl.NumberFormat('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(dollarTotal);
+            document.getElementById('dollar_total').textContent = formattedDollarTotal;
+        }
     };
 
     // Inicializar

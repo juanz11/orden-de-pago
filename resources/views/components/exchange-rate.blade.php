@@ -15,7 +15,7 @@
         <div class="ml-3">
             <p class="text-sm text-blue-700">
                 <span class="font-medium">Tasa BCV actual:</span>
-                <span class="font-bold">{{ number_format($usdRate, 2) }} Bs.</span>
+                <span class="font-bold exchange-rate-value" data-rate="{{ $usdRate }}">{{ number_format($usdRate, 2, ',', '.') }} Bs.</span>
             </p>
         </div>
     </div>
