@@ -5,20 +5,26 @@
     <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
             <div class="p-6 text-gray-900">
-                <h2 class="text-2xl font-bold mb-4">Gestión de Órdenes</h2>
+                <div class="mb-4">
+                    <h2 class="text-2xl font-bold">Gestión de Órdenes</h2>
+                </div>
 
                 @include('components.exchange-rate')
 
-                @if(session('success'))
-                    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
-                        <span class="block sm:inline">{{ session('success') }}</span>
-                    </div>
-                @endif
+                <div class="mb-4">
+                    <label for="department_filter" class="block text-sm font-medium text-gray-700">Filtrar por Departamento:</label>
+                    <select id="department_filter" class="mt-1 block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">Todos los departamentos</option>
+                        @foreach($departments as $department)
+                            <option value="{{ $department }}">{{ $department }}</option>
+                        @endforeach
+                    </select>
+                </div>
 
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto bg-white rounded-lg shadow overflow-y-auto relative">
                     <table class="min-w-full bg-white" style="
-    width: 100%;
-">
+                    width: 100%;
+                    ">
                         <thead class="bg-gray-100">
                             <tr>
                                 <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
@@ -91,8 +97,8 @@
                                     @if($order->status === 'pendiente')
                                         <div class="space-y-2">
                                             <a href="{{ route('orders.edit', $order) }}" class="inline-block bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700 mb-2" style="
-    background-color: cadetblue;
-">
+                                background-color: cadetblue;
+                                ">
                                                 Editar
                                             </a>
                                             <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex items-center space-x-2">
@@ -126,3 +132,21 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.getElementById('department_filter').addEventListener('change', function() {
+        const selectedDepartment = this.value;
+        const rows = document.querySelectorAll('tbody tr');
+        
+        rows.forEach(row => {
+            const departmentCell = row.querySelector('td:nth-child(2)');
+            if (!selectedDepartment || departmentCell.textContent.trim() === selectedDepartment) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+</script>
+@endpush

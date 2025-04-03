@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Supplier;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -19,7 +20,12 @@ class OrderController extends Controller
     public function adminIndex()
     {
         $orders = Order::with(['user', 'supplier', 'items'])->latest()->get();
-        return view('orders.admin', compact('orders'));
+        $departments = User::distinct('department')->pluck('department')->filter();
+        
+        return view('orders.admin', [
+            'orders' => $orders,
+            'departments' => $departments
+        ]);
     }
 
     public function create()
