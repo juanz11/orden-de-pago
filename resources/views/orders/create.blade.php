@@ -9,6 +9,8 @@
                     <h2 class="text-2xl font-bold">Nueva Orden</h2>
                 </div>
 
+                @include('components.exchange-rate')
+
                 <form method="POST" action="{{ route('orders.store') }}" class="space-y-6">
                     @csrf
 
