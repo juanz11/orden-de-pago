@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Mail\NewOrderNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 
 class OrderController extends Controller
 {
@@ -67,6 +69,15 @@ class OrderController extends Controller
 
             // El total se calcula automáticamente por el modelo
             $order->save();
+
+            // Enviar correo al solicitante
+            Mail::to($order->user->email)->send(new NewOrderNotification($order));
+
+            // Enviar correo a los administradores
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                Mail::to($admin->email)->send(new NewOrderNotification($order));
+            }
 
             DB::commit();
             return redirect()->route('orders.index')->with('success', 'Orden creada exitosamente.');
