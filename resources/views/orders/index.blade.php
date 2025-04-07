@@ -120,5 +120,9 @@
             </tbody>
         </table>
     </div>
+
+    <div class="mt-4">
+        {{ $orders->links() }}
+    </div>
 </div>
 @endsection

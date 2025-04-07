@@ -15,13 +15,23 @@ class OrderController extends Controller
 {
     public function index()
     {
-        $orders = auth()->user()->orders()->with(['supplier', 'items'])->latest()->get();
+        $orders = auth()->user()->orders()
+            ->with(['supplier:id,name', 'items:id,order_id,description,quantity,unit_price'])
+            ->latest()
+            ->paginate(10);
         return view('orders.index', compact('orders'));
     }
 
     public function adminIndex()
     {
-        $orders = Order::with(['user', 'supplier', 'items'])->latest()->get();
+        $orders = Order::with([
+            'user:id,name,email,department',
+            'supplier:id,name',
+            'items:id,order_id,description,quantity,unit_price'
+        ])
+        ->latest()
+        ->paginate(10);
+        
         $departments = User::distinct('department')->pluck('department')->filter();
         
         return view('orders.admin', [
@@ -70,13 +80,13 @@ class OrderController extends Controller
             // El total se calcula automáticamente por el modelo
             $order->save();
 
-            // Enviar correo al solicitante
-            Mail::to($order->user->email)->send(new NewOrderNotification($order));
+            // Enviar correo al solicitante de forma asíncrona
+            Mail::to($order->user->email)->queue(new NewOrderNotification($order));
 
-            // Enviar correo a los administradores y superadministradores
+            // Enviar correo a los administradores y superadministradores de forma asíncrona
             $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
             foreach ($admins as $admin) {
-                Mail::to($admin->email)->send(new NewOrderNotification($order));
+                Mail::to($admin->email)->queue(new NewOrderNotification($order));
             }
 
             DB::commit();
