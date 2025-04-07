@@ -73,8 +73,8 @@ class OrderController extends Controller
             // Enviar correo al solicitante
             Mail::to($order->user->email)->send(new NewOrderNotification($order));
 
-            // Enviar correo a los administradores
-            $admins = User::where('role', 'admin')->get();
+            // Enviar correo a los administradores y superadministradores
+            $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
             foreach ($admins as $admin) {
                 Mail::to($admin->email)->send(new NewOrderNotification($order));
             }
