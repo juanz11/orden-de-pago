@@ -14,18 +14,14 @@ return new class extends Migration
     {
         // Primero modificar la longitud de la columna
         Schema::table('orders', function (Blueprint $table) {
-            $table->string('status', 20)->change();
+            $table->dropColumn('status');
+            $table->enum('status', ['pendiente', 'aprobado', 'rechazado'])->default('pendiente')->after('total');
         });
 
         // Luego actualizar los estados existentes a español
         DB::statement("UPDATE orders SET status = 'pendiente' WHERE status = 'pending'");
         DB::statement("UPDATE orders SET status = 'aprobado' WHERE status = 'approved'");
         DB::statement("UPDATE orders SET status = 'rechazado' WHERE status = 'declined'");
-
-        // Finalmente establecer el valor por defecto en español
-        Schema::table('orders', function (Blueprint $table) {
-            $table->string('status', 20)->default('pendiente')->change();
-        });
     }
 
     /**
@@ -40,7 +36,8 @@ return new class extends Migration
 
         // Luego restaurar el valor por defecto en inglés
         Schema::table('orders', function (Blueprint $table) {
-            $table->string('status', 20)->default('pending')->change();
+            $table->dropColumn('status');
+            $table->enum('status', ['pending', 'approved', 'declined'])->default('pending')->after('total');
         });
     }
 };

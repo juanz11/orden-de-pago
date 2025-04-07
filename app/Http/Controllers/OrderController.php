@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -48,52 +50,68 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
-            'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
-            'other_supplier' => 'nullable|string|required_without:supplier_id',
-            'items' => 'required|array|min:1',
-            'items.*.description' => 'required|string',
-            'items.*.unit_price' => 'required|numeric|min:0',
-            'items.*.quantity' => 'required|integer|min:1',
-        ]);
-
-        DB::beginTransaction();
         try {
+            $request->validate([
+                'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
+                'other_supplier' => 'nullable|string|required_without:supplier_id',
+                'items' => 'required|array|min:1',
+                'items.*.description' => 'required|string',
+                'items.*.unit_price' => 'required|numeric|min:0',
+                'items.*.quantity' => 'required|integer|min:1',
+            ]);
+
+            DB::beginTransaction();
+
             $order = new Order([
                 'supplier_id' => $request->supplier_id !== 'otro' ? $request->supplier_id : null,
                 'other_supplier' => $request->supplier_id === 'otro' ? $request->other_supplier : null,
-                'status' => Order::STATUS_PENDING,
-                'total' => 0 // Se calculará automáticamente
+                'status' => 'pendiente',
+                'total' => 0
             ]);
 
             $order->user()->associate(auth()->user());
             $order->save();
 
+            $total = 0;
             foreach ($request->items as $item) {
-                $order->items()->create([
+                $orderItem = $order->items()->create([
                     'description' => $item['description'],
-                    'unit_price' => $item['unit_price'],
-                    'quantity' => $item['quantity']
+                    'unit_price' => floatval($item['unit_price']),
+                    'quantity' => intval($item['quantity'])
                 ]);
+                $total += $orderItem->unit_price * $orderItem->quantity;
             }
 
-            // El total se calcula automáticamente por el modelo
+            $order->total = $total;
             $order->save();
 
-            // Enviar correo al solicitante de forma asíncrona
-            Mail::to($order->user->email)->queue(new NewOrderNotification($order));
+            DB::commit();
 
-            // Enviar correo a los administradores y superadministradores de forma asíncrona
-            $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
-            foreach ($admins as $admin) {
-                Mail::to($admin->email)->queue(new NewOrderNotification($order));
+            try {
+                // Enviar correo al solicitante
+                Log::info('Enviando correo al solicitante: ' . $order->user->email);
+                Mail::to($order->user->email)
+                    ->queue(new NewOrderNotification($order));
+
+                // Enviar correo a los administradores
+                $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
+                foreach ($admins as $admin) {
+                    Log::info('Enviando correo al administrador: ' . $admin->email);
+                    Mail::to($admin->email)
+                        ->queue(new NewOrderNotification($order));
+                }
+            } catch (\Exception $e) {
+                Log::error('Error al enviar correos: ' . $e->getMessage());
             }
 
-            DB::commit();
-            return redirect()->route('orders.index')->with('success', 'Orden creada exitosamente.');
+            return redirect()->route('orders.index')->with('success', 'Orden creada correctamente.');
+
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
-            DB::rollback();
-            return back()->with('error', 'Error al crear la orden. Por favor, intente nuevamente.');
+            DB::rollBack();
+            Log::error('Error al crear orden: ' . $e->getMessage());
+            return back()->with('error', 'Error al crear la orden. Por favor, inténtalo de nuevo.');
         }
     }
 

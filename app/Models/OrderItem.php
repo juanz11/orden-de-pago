@@ -15,6 +15,12 @@ class OrderItem extends Model
         'total'
     ];
 
+    protected $casts = [
+        'unit_price' => 'float',
+        'quantity' => 'integer',
+        'total' => 'float'
+    ];
+
     protected static function boot()
     {
         parent::boot();
