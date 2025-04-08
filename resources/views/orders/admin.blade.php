@@ -27,14 +27,14 @@
                     ">
                         <thead class="bg-gray-100">
                             <tr >
-                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
-                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
-                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
-                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Productos</th>
-                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                <th class="px-16 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                                <th class="px-16 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                                <th class="px-16 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
+                                <th class="px-16 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Productos</th>
+                                <th class="px-16 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                <th class="px-16 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-16 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-16 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -42,13 +42,13 @@
                             <tr style="
     border-color: black;
 ">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <td class="px-16 py-4 whitespace-nowrap text-sm">
                                     {{ $order->user->name }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <td class="px-16 py-4 whitespace-nowrap text-sm">
                                     {{ $order->user->department }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <td class="px-16 py-4 whitespace-nowrap text-sm">
                                     @if($order->supplier)
                                         {{ $order->supplier->name }}
                                     @elseif($order->other_supplier)
@@ -57,7 +57,7 @@
                                         <span class="text-gray-500">No especificado</span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-sm">
+                                <td class="px-16 py-4 text-sm">
                                     <div class="space-y-2">
                                         @foreach($order->items as $item)
                                         <div>
@@ -71,10 +71,10 @@
                                         @endforeach
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <td class="px-16 py-4 whitespace-nowrap text-sm font-medium">
                                     <x-format-currency :amount="$order->total" />
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <td class="px-16 py-4 whitespace-nowrap text-sm">
                                     @if($order->status === 'pendiente')
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
                                             Pendiente
@@ -92,10 +92,10 @@
                                         <p class="text-xs text-gray-500 mt-1">{{ $order->admin_comments }}</p>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <td class="px-16 py-4 whitespace-nowrap text-sm">
                                     {{ $order->created_at->format('d/m/Y H:i') }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <td class="px-16 py-4 whitespace-nowrap text-sm">
                                     @if($order->status === 'pendiente')
                                         <div class="space-y-2">
                                             <a href="{{ route('orders.edit', $order) }}" class="inline-block bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700 mb-2" style="
