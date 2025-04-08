@@ -192,14 +192,14 @@ class OrderController extends Controller
             // Enviar correo al creador de la orden
             Log::info('Enviando correo de actualización de estado al solicitante: ' . $order->user->email);
             Mail::to($order->user->email)
-                ->queue(new OrderStatusNotification($order));
+                ->send(new OrderStatusNotification($order));
 
             // Enviar correo a los administradores
             $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
             foreach ($admins as $admin) {
                 Log::info('Enviando correo de actualización de estado al administrador: ' . $admin->email);
                 Mail::to($admin->email)
-                    ->queue(new OrderStatusNotification($order));
+                    ->send(new OrderStatusNotification($order));
             }
         } catch (\Exception $e) {
             Log::error('Error al enviar correos de actualización de estado: ' . $e->getMessage());
