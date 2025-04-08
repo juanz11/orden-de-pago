@@ -7,6 +7,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
+use App\Exports\OrdersExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -49,6 +51,8 @@ class ReportController extends Controller
         if ($request->format === 'pdf') {
             $pdf = Pdf::loadView('reports.pdf', $data);
             return $pdf->download('reporte-ordenes.pdf');
+        } elseif ($request->format === 'excel') {
+            return Excel::download(new OrdersExport($orders), 'reporte-ordenes.xlsx');
         }
 
         return view('reports.show', $data);

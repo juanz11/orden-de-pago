@@ -7,12 +7,15 @@
             <div class="p-6 text-gray-900">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-2xl font-bold">Reporte de Órdenes</h2>
-                    <form action="{{ route('reports.generate') }}" method="GET" class="inline">
+                    <form action="{{ route('reports.generate') }}" method="GET" class="inline-flex space-x-2">
                         <input type="hidden" name="start_date" value="{{ request('start_date') }}">
                         <input type="hidden" name="end_date" value="{{ request('end_date') }}">
                         <input type="hidden" name="department" value="{{ request('department') }}">
                         <button type="submit" name="format" value="pdf" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
                             Descargar PDF
+                        </button>
+                        <button type="submit" name="format" value="excel" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Descargar Excel
                         </button>
                     </form>
                 </div>
