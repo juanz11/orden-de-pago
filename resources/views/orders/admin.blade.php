@@ -13,7 +13,7 @@
 
                 <div class="mb-4">
                     <label for="department_filter" class="block text-sm font-medium text-gray-700">Filtrar por Departamento:</label>
-                    <select id="department_filter" class="mt-1 block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <select id="department_filter" class="mt-1 block w-64 rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                         <option value="">Todos los departamentos</option>
                         @foreach($departments as $department)
                             <option value="{{ $department }}">{{ $department }}</option>
@@ -26,20 +26,22 @@
                     width: 100%;
                     ">
                         <thead class="bg-gray-100">
-                            <tr>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Productos</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-                                <th class="px-6 py-3 border-b border-gray-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            <tr >
+                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
+                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Departamento</th>
+                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Proveedor</th>
+                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Productos</th>
+                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-3 border-b border-black-200 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
                             @foreach($orders as $order)
-                            <tr>
+                            <tr style="
+    border-color: black;
+">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     {{ $order->user->name }}
                                 </td>
@@ -105,7 +107,7 @@
                                                 @csrf
                                                 <input type="hidden" name="status" value="aprobado">
                                                 <input type="text" name="admin_comments" placeholder="Comentarios"
-                                                    class="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                                    class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                                 <button type="submit" class="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">
                                                     Aprobar
                                                 </button>
@@ -114,7 +116,7 @@
                                                 @csrf
                                                 <input type="hidden" name="status" value="rechazado">
                                                 <input type="text" name="admin_comments" placeholder="Comentarios"
-                                                    class="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                                    class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                                 <button type="submit" class="bg-red-600 text-white text-xs px-2 py-1 rounded hover:bg-red-700">
                                                     Rechazar
                                                 </button>

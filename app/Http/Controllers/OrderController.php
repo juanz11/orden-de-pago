@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Mail\NewOrderNotification;
+use App\Mail\OrderStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -91,14 +92,14 @@ class OrderController extends Controller
                 // Enviar correo al solicitante
                 Log::info('Enviando correo al solicitante: ' . $order->user->email);
                 Mail::to($order->user->email)
-                    ->queue(new NewOrderNotification($order));
+                    ->send(new NewOrderNotification($order));
 
                 // Enviar correo a los administradores
                 $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
                 foreach ($admins as $admin) {
                     Log::info('Enviando correo al administrador: ' . $admin->email);
                     Mail::to($admin->email)
-                        ->queue(new NewOrderNotification($order));
+                        ->send(new NewOrderNotification($order));
                 }
             } catch (\Exception $e) {
                 Log::error('Error al enviar correos: ' . $e->getMessage());
@@ -186,6 +187,23 @@ class OrderController extends Controller
             'status' => $request->status,
             'admin_comments' => $request->admin_comments
         ]);
+
+        try {
+            // Enviar correo al creador de la orden
+            Log::info('Enviando correo de actualización de estado al solicitante: ' . $order->user->email);
+            Mail::to($order->user->email)
+                ->queue(new OrderStatusNotification($order));
+
+            // Enviar correo a los administradores
+            $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
+            foreach ($admins as $admin) {
+                Log::info('Enviando correo de actualización de estado al administrador: ' . $admin->email);
+                Mail::to($admin->email)
+                    ->queue(new OrderStatusNotification($order));
+            }
+        } catch (\Exception $e) {
+            Log::error('Error al enviar correos de actualización de estado: ' . $e->getMessage());
+        }
 
         return redirect()->route('orders.admin')
             ->with('success', 'Estado de la orden actualizado exitosamente.');

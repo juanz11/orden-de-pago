@@ -33,7 +33,6 @@
 ">
             <thead>
                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                    <th class="py-3 px-6 text-left">#</th>
                     <th class="py-3 px-6 text-left">Proveedor</th>
                     <th class="py-3 px-6 text-left">Productos</th>
                     <th class="py-3 px-6 text-left">Total</th>
@@ -47,8 +46,8 @@
             </thead>
             <tbody class="text-gray-600 text-sm font-light">
                 @foreach($orders as $order)
-                <tr class="border-b border-gray-200 hover:bg-gray-100">
-                    <td class="py-3 px-6 text-left">{{ $order->id }}</td>
+                <tr class="border-b border-black-200 hover:bg-gray-100">
+                   
                     <td class="py-3 px-6 text-left">
                         @if($order->supplier)
                             {{ $order->supplier->name }}
@@ -98,7 +97,7 @@
                                 @csrf
                                 <input type="hidden" name="status" value="aprobado">
                                 <input type="text" name="admin_comments" placeholder="Comentarios"
-                                    class="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <button type="submit" class="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">
                                     Aprobar
                                 </button>
@@ -107,7 +106,7 @@
                                 @csrf
                                 <input type="hidden" name="status" value="rechazado">
                                 <input type="text" name="admin_comments" placeholder="Comentarios"
-                                    class="text-sm rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                    class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <button type="submit" class="bg-red-600 text-white text-xs px-2 py-1 rounded hover:bg-red-700">
                                     Rechazar
                                 </button>
