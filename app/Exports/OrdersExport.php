@@ -28,7 +28,8 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping
             'Departamento',
             'Proveedor',
             'Items',
-            'Total',
+            'Total USD',
+            'Total BSF',
             'Estado'
         ];
     }
@@ -39,13 +40,17 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping
             return $item->description . ' (' . $item->quantity . ' x $' . number_format($item->unit_price, 2) . ')';
         })->join("\n");
 
+        $exchange_rate = config('app.exchange_rate', 35.50); // Tasa de cambio por defecto
+        $total_usd = $order->total / $exchange_rate; // Convertir de BSF a USD
+
         return [
             $order->created_at->format('d/m/Y'),
             $order->user->name,
             $order->user->department,
             $order->supplier ? $order->supplier->name : $order->other_supplier,
             $items,
-            '$' . number_format($order->total, 2),
+            '$' . number_format($total_usd, 2),
+            'BSF ' . number_format($order->total, 2),
             ucfirst($order->status)
         ];
     }
