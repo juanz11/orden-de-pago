@@ -105,9 +105,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     @if($order->status === 'pendiente')
                                         <div class="space-y-2">
-                                            <a href="{{ route('orders.edit', $order) }}" class="inline-block bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700 mb-2" style="
-                                background-color: cadetblue;
-                                ">
+                                            <a href="{{ route('orders.edit', $order) }}" class="inline-block bg-blue-600  text-xs px-2 py-1 rounded hover:bg-blue-700 mb-2" style="background-color: cadetblue;">
                                                 Editar
                                             </a>
                                             <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex items-center space-x-2">
@@ -129,6 +127,10 @@
                                                 </button>
                                             </form>
                                         </div>
+                                    @elseif($order->status === 'aprobado')
+                                        <a href="{{ route('orders.pdf', $order) }}" class="inline-block bg-gray-600  text-xs px-2 py-1 rounded hover:bg-gray-700" style="background-color: mediumaquamarine;">
+                                            Descargar PDF
+                                        </a>
                                     @endif
                                 </td>
                             </tr>

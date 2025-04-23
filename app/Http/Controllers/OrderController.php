@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class OrderController extends Controller
 {
@@ -214,5 +215,15 @@ class OrderController extends Controller
 
         return redirect()->route('orders.admin')
             ->with('success', 'Estado de la orden actualizado exitosamente.');
+    }
+
+    public function downloadPdf(Order $order)
+    {
+        if ($order->status !== 'aprobado') {
+            return back()->with('error', 'Solo se pueden descargar órdenes aprobadas.');
+        }
+
+        $pdf = PDF::loadView('orders.pdf', compact('order'));
+        return $pdf->download('orden-' . str_pad($order->id, 4, '0', STR_PAD_LEFT) . '.pdf');
     }
 }

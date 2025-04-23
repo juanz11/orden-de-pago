@@ -91,6 +91,12 @@
                             @endif
                         @endif
 
+                        @if($order->status === 'aprobado')
+                            <a href="{{ route('orders.pdf', $order) }}" class="inline-block bg-gray-600 text-xs px-2 py-1 rounded hover:bg-gray-700">
+                                Descargar PDF
+                            </a>
+                        @endif
+
                         @if(auth()->user()->isAdmin() && $order->status === 'pendiente')
                         <div class="mt-2 flex flex-col space-y-2">
                             <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex items-center space-x-2">
