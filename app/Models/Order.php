@@ -19,6 +19,7 @@ class Order extends Model
     protected $fillable = [
         'status',
         'admin_comments',
+        'admin_id',
         'supplier_id',
         'other_supplier',
         'total'
@@ -27,6 +28,11 @@ class Order extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function admin()
+    {
+        return $this->belongsTo(User::class, 'admin_id');
     }
 
     public function supplier()

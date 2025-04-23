@@ -19,6 +19,9 @@
         <p>Hola {{ $order->user->name }},</p>
 
         <p>Tu orden de pago ha sido <span class="status">{{ $isApproved ? 'aprobada' : 'rechazada' }}</span>.</p>
+        @if($isApproved && $order->admin)
+        <p>Aprobada por: <strong>{{ $order->admin->name }}</strong></p>
+        @endif
 
         <div class="details">
             <h3>Detalles de la Orden:</h3>

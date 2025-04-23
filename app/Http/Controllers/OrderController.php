@@ -185,7 +185,8 @@ class OrderController extends Controller
 
         $order->update([
             'status' => $request->status,
-            'admin_comments' => $request->admin_comments
+            'admin_comments' => $request->admin_comments,
+            'admin_id' => auth()->id()
         ]);
 
         try {
