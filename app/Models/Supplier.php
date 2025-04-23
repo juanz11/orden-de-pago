@@ -10,5 +10,8 @@ class Supplier extends Model
         'name',
         'rif',
         'phone',
+        'address',
+        'contact_name',
+        'payment_condition'
     ];
 }

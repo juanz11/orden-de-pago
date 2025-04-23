@@ -27,6 +27,15 @@
             <h3>Detalles de la Orden:</h3>
             <p><strong>Número de Orden:</strong> {{ $order->id }}</p>
             <p><strong>Proveedor:</strong> {{ $order->supplier ? $order->supplier->name : $order->other_supplier }}</p>
+            @if($order->supplier && ($order->supplier->address || $order->supplier->contact_name))
+            <p><strong>Detalles del Proveedor:</strong></p>
+            @if($order->supplier->address)
+            <p style="margin-left: 20px;"><strong>Dirección:</strong> {{ $order->supplier->address }}</p>
+            @endif
+            @if($order->supplier->contact_name)
+            <p style="margin-left: 20px;"><strong>Contacto:</strong> {{ $order->supplier->contact_name }}</p>
+            @endif
+            @endif
             <p><strong>Total:</strong> ${{ number_format($order->total, 2) }}</p>
             @if($order->admin_comments)
             <p><strong>Comentarios:</strong> {{ $order->admin_comments }}</p>

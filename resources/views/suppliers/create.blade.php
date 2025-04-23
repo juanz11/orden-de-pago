@@ -39,6 +39,34 @@
                         @enderror
                     </div>
 
+                    <div>
+                        <label for="address" class="block text-sm font-medium text-gray-700">Dirección</label>
+                        <textarea name="address" id="address" rows="3"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('address') }}</textarea>
+                        @error('address')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="contact_name" class="block text-sm font-medium text-gray-700">Nombre de Contacto</label>
+                        <input type="text" name="contact_name" id="contact_name" value="{{ old('contact_name') }}"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        @error('contact_name')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="payment_condition" class="block text-sm font-medium text-gray-700">Condición de Pago</label>
+                        <input type="text" name="payment_condition" id="payment_condition" value="{{ old('payment_condition') }}"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            placeholder="Ej: 30 días, Contado, etc.">
+                        @error('payment_condition')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <div class="flex items-center justify-end space-x-3">
                         <a href="{{ route('suppliers.index') }}" 
                             class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
