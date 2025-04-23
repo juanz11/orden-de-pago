@@ -155,14 +155,20 @@ class OrderController extends Controller
             // Eliminar items existentes
             $order->items()->delete();
 
-            // Crear nuevos items
+            // Crear nuevos items y calcular total
+            $total = 0;
             foreach ($request->items as $item) {
-                $order->items()->create([
+                $orderItem = $order->items()->create([
                     'description' => $item['description'],
-                    'unit_price' => $item['unit_price'],
-                    'quantity' => $item['quantity']
+                    'unit_price' => floatval($item['unit_price']),
+                    'quantity' => intval($item['quantity'])
                 ]);
+                $total += $orderItem->unit_price * $orderItem->quantity;
             }
+
+            // Actualizar el total de la orden
+            $order->total = $total;
+            $order->save();
 
             DB::commit();
             return redirect()->route('orders.index')->with('success', 'Orden actualizada exitosamente.');
