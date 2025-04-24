@@ -111,7 +111,10 @@
                     <strong>Fecha de la orden:</strong> {{ $order->created_at->format('d/m/Y') }}<br>
                     <strong>Fecha de Entrega:</strong> {{ $order->created_at->format('d/m/Y') }}<br>
                     <strong>Contacto:</strong> {{ $order->supplier ? $order->supplier->contact_name : '' }}<br>
-                    <strong>Condición de Pago:</strong> {{ $order->supplier ? $order->supplier->payment_condition : '' }}
+                    <strong>Condición de Pago:</strong> {{ $order->supplier ? $order->supplier->payment_condition : '' }}<br>
+                    @if($order->exchange_rate)
+                    <strong>Tasa de cambio:</strong> {{ number_format($order->exchange_rate, 2, ',', '.') }} BsF/USD
+                    @endif
                 </td>
             </tr>
         </table>
@@ -120,11 +123,16 @@
     <table>
         <thead>
             <tr>
-                <th>Código</th>
+                <th>Item</th>
                 <th>Descripción</th>
                 <th>Cantidad</th>
-                <th>Precio Unit.</th>
-                <th>Monto (Bs)</th>
+                @if($order->exchange_rate)
+                <th>Precio Unit. (USD)</th>
+                <th>Monto (USD)</th>
+                @else
+                <th>Precio Unit. (BsF)</th>
+                <th>Monto (BsF)</th>
+                @endif
             </tr>
         </thead>
         <tbody>
@@ -133,8 +141,13 @@
                 <td>00-{{ $loop->iteration }}</td>
                 <td>{{ $item->description }}</td>
                 <td>{{ $item->quantity }}</td>
-                <td>{{ number_format($item->unit_price, 2, ',', '.') }}</td>
-                <td>{{ number_format($item->quantity * $item->unit_price, 2, ',', '.') }}</td>
+                @if($order->exchange_rate)
+                <td>$ {{ number_format($item->unit_price / $order->exchange_rate, 2, '.', ',') }}</td>
+                <td>$ {{ number_format(($item->quantity * $item->unit_price) / $order->exchange_rate, 2, '.', ',') }}</td>
+                @else
+                <td>Bs.F {{ number_format($item->unit_price, 2, ',', '.') }}</td>
+                <td>Bs.F {{ number_format($item->quantity * $item->unit_price, 2, ',', '.') }}</td>
+                @endif
             </tr>
             @endforeach
         </tbody>
@@ -143,16 +156,26 @@
     <div class="totals">
         <table>
             <tr>
-                <td><strong>SUB-TOTAL:</strong></td>
-                <td>{{ number_format($order->total, 2, ',', '.') }}</td>
+                @if($order->exchange_rate)
+                <td><strong>SUB-TOTAL (USD):</strong></td>
+                <td>$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
+                @else
+                <td><strong>SUB-TOTAL (BsF):</strong></td>
+                <td>Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
+                @endif
             </tr>
             {{-- <tr>
                 <td><strong>I.V.A. (0%)</strong></td>
                 <td>{{ number_format(0, 2, ',', '.') }}</td>
             </tr> --}}
             <tr>
-                <td><strong>TOTAL</strong></td>
-                <td>{{ number_format($order->total, 2, ',', '.') }}</td>
+                @if($order->exchange_rate)
+                <td><strong>TOTAL (USD)</strong></td>
+                <td>$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
+                @else
+                <td><strong>TOTAL (BsF)</strong></td>
+                <td>Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
+                @endif
             </tr>
         </table>
     </div>

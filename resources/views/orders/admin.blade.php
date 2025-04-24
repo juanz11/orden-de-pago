@@ -111,8 +111,12 @@
                                             <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex items-center space-x-2">
                                                 @csrf
                                                 <input type="hidden" name="status" value="aprobado">
-                                                <input type="text" name="admin_comments" placeholder="Comentarios"
-                                                    class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                                <div class="flex flex-col space-y-2">
+                                                    <input type="number" name="exchange_rate" step="0.01" min="0" placeholder="Tasa de cambio BsF/USD"
+                                                        class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                                    <input type="text" name="admin_comments" placeholder="Comentarios"
+                                                        class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                                </div>
                                                 <button type="submit" class="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">
                                                     Aprobar
                                                 </button>

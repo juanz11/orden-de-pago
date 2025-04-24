@@ -186,35 +186,42 @@ class OrderController extends Controller
         }
 
         $request->validate([
-            'status' => 'required|in:' . Order::STATUS_APPROVED . ',' . Order::STATUS_DECLINED,
-            'admin_comments' => 'nullable|string'
-        ]);
-
-        $order->update([
-            'status' => $request->status,
-            'admin_comments' => $request->admin_comments,
-            'admin_id' => auth()->id()
+            'status' => 'required|in:aprobado,rechazado',
+            'admin_comments' => 'nullable|string',
+            'exchange_rate' => 'required_if:status,aprobado|numeric|min:0'
         ]);
 
         try {
-            // Enviar correo al creador de la orden
-            Log::info('Enviando correo de actualización de estado al solicitante: ' . $order->user->email);
-            Mail::to($order->user->email)
-                ->send(new OrderStatusNotification($order));
+            $order->update([
+                'status' => $request->status,
+                'admin_comments' => $request->admin_comments,
+                'admin_id' => auth()->id(),
+                'exchange_rate' => $request->exchange_rate
+            ]);
 
-            // Enviar correo a los administradores
-            $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
-            foreach ($admins as $admin) {
-                Log::info('Enviando correo de actualización de estado al administrador: ' . $admin->email);
-                Mail::to($admin->email)
+            try {
+                // Enviar correo al creador de la orden
+                Log::info('Enviando correo de actualización de estado al solicitante: ' . $order->user->email);
+                Mail::to($order->user->email)
                     ->send(new OrderStatusNotification($order));
-            }
-        } catch (\Exception $e) {
-            Log::error('Error al enviar correos de actualización de estado: ' . $e->getMessage());
-        }
 
-        return redirect()->route('orders.admin')
-            ->with('success', 'Estado de la orden actualizado exitosamente.');
+                // Enviar correo a los administradores
+                $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
+                foreach ($admins as $admin) {
+                    Log::info('Enviando correo de actualización de estado al administrador: ' . $admin->email);
+                    Mail::to($admin->email)
+                        ->send(new OrderStatusNotification($order));
+                }
+            } catch (\Exception $e) {
+                Log::error('Error al enviar correos de actualización de estado: ' . $e->getMessage());
+            }
+
+            return redirect()->route('orders.admin')
+                ->with('success', 'Estado de la orden actualizado exitosamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar estado de la orden: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al actualizar estado de la orden. Por favor, inténtalo de nuevo.');
+        }
     }
 
     public function updateObservations(Request $request, Order $order)
@@ -245,7 +252,11 @@ class OrderController extends Controller
             return back()->with('error', 'Solo se pueden descargar órdenes aprobadas.');
         }
 
-        $order->load(['user', 'supplier', 'items']); // Asegurarnos de cargar todas las relaciones
+        $order->load(['user', 'supplier', 'items']);
+
+        if ($order->status === 'aprobado' && !$order->exchange_rate) {
+            return back()->with('error', 'La orden necesita una tasa de cambio para ser descargada.');
+        }
 
         $pdf = PDF::loadView('orders.pdf', compact('order'));
         
