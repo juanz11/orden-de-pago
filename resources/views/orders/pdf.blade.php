@@ -176,15 +176,23 @@
         </div>
     </div>
 
-    <div class="signatures">
-        <div class="signature">
-            Jefe de Compras<br>
-            Joel A. Lopez J.
-        </div>
-        <div class="signature">
-            Representante Legal<br>
-            Julio H. Brandt T.
-        </div>
+    <div style="margin-top: 60px; font-size: 0.8em;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 50%; padding: 20px; border: none;">
+                    <div style="border-top: 1px solid black; text-align: center;">
+                        <div style="margin-top: 5px;">Jefe de Compras</div>
+                        <div>Joel A. Lopez J.</div>
+                    </div>
+                </td>
+                <td style="width: 50%; padding: 20px; border: none;">
+                    <div style="border-top: 1px solid black; text-align: center;">
+                        <div style="margin-top: 5px;">Representante Legal</div>
+                        <div>Julio H. Brandt T.</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 </html>
