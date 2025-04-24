@@ -142,9 +142,16 @@
                                                     Guardar
                                                 </button>
                                             </form>
-                                            <a href="{{ route('orders.pdf', $order) }}" class="inline-block bg-gray-600 text-white text-xs px-2 py-1 rounded hover:bg-gray-700" style="background-color: mediumaquamarine;">
-                                                Descargar PDF
-                                            </a>
+                                            <div class="flex items-center space-x-2" style="background-color: mediumaquamarine">
+                                                <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bsf']) }}" class="inline-block bg-gray-600 text-white text-xs px-2 py-1 rounded hover:bg-gray-700">
+                                                Descargar PDF (BsF)
+                                                </a>
+                                                @if($order->exchange_rate)
+                                                <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'usd']) }}" class="inline-block bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">
+                                                    Descargar PDF (USD)
+                                                </a>
+                                                @endif
+                                            </div>
                                         </div>
                                     @endif
                                 </td>

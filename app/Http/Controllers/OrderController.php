@@ -246,7 +246,7 @@ class OrderController extends Controller
         }
     }
 
-    public function downloadPdf(Order $order)
+    public function downloadPdf(Order $order, Request $request)
     {
         if ($order->status !== 'aprobado') {
             return back()->with('error', 'Solo se pueden descargar órdenes aprobadas.');
@@ -254,11 +254,13 @@ class OrderController extends Controller
 
         $order->load(['user', 'supplier', 'items']);
 
-        if ($order->status === 'aprobado' && !$order->exchange_rate) {
-            return back()->with('error', 'La orden necesita una tasa de cambio para ser descargada.');
+        // Validar moneda
+        $currency = $request->query('currency', 'bsf');
+        if ($currency === 'usd' && !$order->exchange_rate) {
+            return back()->with('error', 'La orden necesita una tasa de cambio para ser descargada en USD.');
         }
 
-        $pdf = PDF::loadView('orders.pdf', compact('order'));
+        $pdf = PDF::loadView('orders.pdf', compact('order', 'currency'));
         
         // Configurar tamaño de página personalizado (214 × 277 mm)
         $pdf->setPaper([0, 0, 606.77, 785.2]); // Convertir mm a puntos (1 mm = 2.835 puntos)

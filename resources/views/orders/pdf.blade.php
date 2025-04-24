@@ -126,13 +126,8 @@
                 <th>Item</th>
                 <th>Descripción</th>
                 <th>Cantidad</th>
-                @if($order->exchange_rate)
-                <th>Precio Unit. (USD)</th>
-                <th>Monto (USD)</th>
-                @else
-                <th>Precio Unit. (BsF)</th>
-                <th>Monto (BsF)</th>
-                @endif
+                <th>Precio Unit. ({{ strtoupper($currency) }})</th>
+                <th>Monto ({{ strtoupper($currency) }})</th>
             </tr>
         </thead>
         <tbody>
@@ -141,7 +136,7 @@
                 <td>00-{{ $loop->iteration }}</td>
                 <td>{{ $item->description }}</td>
                 <td>{{ $item->quantity }}</td>
-                @if($order->exchange_rate)
+                @if($currency === 'usd')
                 <td>$ {{ number_format($item->unit_price / $order->exchange_rate, 2, '.', ',') }}</td>
                 <td>$ {{ number_format(($item->quantity * $item->unit_price) / $order->exchange_rate, 2, '.', ',') }}</td>
                 @else
@@ -156,7 +151,7 @@
     <div class="totals">
         <table>
             <tr>
-                @if($order->exchange_rate)
+                @if($currency === 'usd')
                 <td><strong>SUB-TOTAL (USD):</strong></td>
                 <td>$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
                 @else
@@ -169,7 +164,7 @@
                 <td>{{ number_format(0, 2, ',', '.') }}</td>
             </tr> --}}
             <tr>
-                @if($order->exchange_rate)
+                @if($currency === 'usd')
                 <td><strong>TOTAL (USD)</strong></td>
                 <td>$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
                 @else
@@ -177,6 +172,13 @@
                 <td>Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
                 @endif
             </tr>
+            @if($currency === 'usd')
+            <tr>
+                <td colspan="2" style="text-align: right; font-size: 0.8em; padding-top: 10px;">
+                    * Montos convertidos usando tasa: {{ number_format($order->exchange_rate, 2, ',', '.') }} BsF/USD
+                </td>
+            </tr>
+            @endif
         </table>
     </div>
 
