@@ -4,10 +4,16 @@
     <meta charset="utf-8">
     <title>Orden de Compra</title>
     <style>
+        @page {
+            size: 214mm 277mm;
+            margin: 15mm;
+        }
         body {
             font-family: Arial, sans-serif;
             font-size: 12px;
             line-height: 1.4;
+            max-width: 184mm; /* 214mm - 30mm for margins */
+            margin: 0 auto;
         }
         .header {
             position: relative;
@@ -138,12 +144,12 @@
         <table>
             <tr>
                 <td><strong>SUB-TOTAL:</strong></td>
-                <td>{{ number_format($order->total / 1.16, 2, ',', '.') }}</td>
+                <td>{{ number_format($order->total, 2, ',', '.') }}</td>
             </tr>
-            <tr>
-                <td><strong>I.V.A. (16%)</strong></td>
-                <td>{{ number_format($order->total - ($order->total / 1.16), 2, ',', '.') }}</td>
-            </tr>
+            {{-- <tr>
+                <td><strong>I.V.A. (0%)</strong></td>
+                <td>{{ number_format(0, 2, ',', '.') }}</td>
+            </tr> --}}
             <tr>
                 <td><strong>TOTAL</strong></td>
                 <td>{{ number_format($order->total, 2, ',', '.') }}</td>
