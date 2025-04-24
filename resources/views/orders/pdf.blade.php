@@ -148,50 +148,51 @@
         </tbody>
     </table>
 
-    <div class="totals">
-        <table>
+    <div style="margin-top: 20px;">
+        <table style="width: 100%; border-collapse: collapse;">
             <tr>
-                @if($currency === 'usd')
-                <td><strong>SUB-TOTAL (USD):</strong></td>
-                <td>$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
-                @else
-                <td><strong>SUB-TOTAL (BsF):</strong></td>
-                <td>Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
-                @endif
-            </tr>
-            {{-- <tr>
-                <td><strong>I.V.A. (0%)</strong></td>
-                <td>{{ number_format(0, 2, ',', '.') }}</td>
-            </tr> --}}
-            <tr>
-                @if($currency === 'usd')
-                <td><strong>TOTAL (USD)</strong></td>
-                <td>$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
-                @else
-                <td><strong>TOTAL (BsF)</strong></td>
-                <td>Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
-                @endif
-            </tr>
-            @if($currency === 'usd')
-            <tr>
-                <td colspan="2" style="text-align: right; font-size: 0.8em; padding-top: 10px;">
-                    * Montos convertidos usando tasa: {{ number_format($order->exchange_rate, 2, ',', '.') }} BsF/USD
+                <td style="width: 60%; vertical-align: top; padding-right: 20px;">
+                    @if($order->observations)
+                    <strong style="color: #ff0000;">OBSERVACIONES:</strong>
+                    <span style="margin-left: 5px; font-weight: bold; font-size: 0.9em;">{{ $order->observations }}</span>
+                    @endif
+                </td>
+                <td style="width: 40%; vertical-align: top;">
+                    <table style="width: 100%;">
+                        <tr>
+                            @if($currency === 'usd')
+                            <td><strong>SUB-TOTAL (USD):</strong></td>
+                            <td style="text-align: right;">$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
+                            @else
+                            <td><strong>SUB-TOTAL (BsF):</strong></td>
+                            <td style="text-align: right;">Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
+                            @endif
+                        </tr>
+                        {{-- <tr>
+                            <td><strong>I.V.A. (0%)</strong></td>
+                            <td style="text-align: right;">{{ number_format(0, 2, ',', '.') }}</td>
+                        </tr> --}}
+                        <tr>
+                            @if($currency === 'usd')
+                            <td><strong>TOTAL (USD)</strong></td>
+                            <td style="text-align: right;">$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
+                            @else
+                            <td><strong>TOTAL (BsF)</strong></td>
+                            <td style="text-align: right;">Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
+                            @endif
+                        </tr>
+                        @if($currency === 'usd')
+                        <tr>
+                            <td colspan="2" style="text-align: right; font-size: 0.8em; padding-top: 10px;">
+                                * Montos convertidos usando tasa: {{ number_format($order->exchange_rate, 2, ',', '.') }} BsF/USD
+                            </td>
+                        </tr>
+                        @endif
+                    </table>
                 </td>
             </tr>
-            @endif
         </table>
     </div>
-
-    @if($order->observations)
-    <div class="user-observations" style="margin: 20px 0;">
-        <div style="display: flex; align-items: start;">
-            <strong style="color: #ff0000;">OBSERVACIONES:</strong>
-            <span style="margin-left: 5px; font-weight: bold; font-size: 0.9em; color: #000;">
-                {!! nl2br(e($order->observations)) !!}
-            </span>
-        </div>
-    </div>
-    @endif
 
     <div class="company-instructions">
         <div style="border: 1px solid #ddd; padding: 10px; margin-top: 5px;">
