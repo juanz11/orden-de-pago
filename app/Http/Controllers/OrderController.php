@@ -217,13 +217,41 @@ class OrderController extends Controller
             ->with('success', 'Estado de la orden actualizado exitosamente.');
     }
 
+    public function updateObservations(Request $request, Order $order)
+    {
+        try {
+            $request->validate([
+                'observations' => 'required|string|max:1000'
+            ]);
+
+            \Log::info('Actualizando observaciones para orden #' . $order->id, [
+                'observations' => $request->observations
+            ]);
+
+            $order->update([
+                'observations' => $request->observations
+            ]);
+
+            return redirect()->back()->with('success', 'Observaciones actualizadas correctamente');
+        } catch (\Exception $e) {
+            \Log::error('Error al actualizar observaciones: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al actualizar observaciones: ' . $e->getMessage());
+        }
+    }
+
     public function downloadPdf(Order $order)
     {
         if ($order->status !== 'aprobado') {
             return back()->with('error', 'Solo se pueden descargar órdenes aprobadas.');
         }
 
+        $order->load(['user', 'supplier', 'items']); // Asegurarnos de cargar todas las relaciones
+
         $pdf = PDF::loadView('orders.pdf', compact('order'));
+        
+        // Configurar tamaño de página personalizado (214 × 277 mm)
+        $pdf->setPaper([0, 0, 606.77, 785.2]); // Convertir mm a puntos (1 mm = 2.835 puntos)
+        
         return $pdf->download('orden-' . str_pad($order->id, 4, '0', STR_PAD_LEFT) . '.pdf');
     }
 }

@@ -157,8 +157,18 @@
         </table>
     </div>
 
-    <div class="observations">
-        <strong>OBSERVACIONES:</strong>
+    @if($order->observations)
+    <div class="user-observations" style="margin: 20px 0;">
+        <div style="display: flex; align-items: start;">
+            <strong style="color: #ff0000;">OBSERVACIONES:</strong>
+            <span style="margin-left: 5px; font-weight: bold; font-size: 0.9em; color: #000;">
+                {!! nl2br(e($order->observations)) !!}
+            </span>
+        </div>
+    </div>
+    @endif
+
+    <div class="company-instructions">
         <div style="border: 1px solid #ddd; padding: 10px; margin-top: 5px;">
             <strong>Es importante que se cumplan las indicaciones aquí señaladas.</strong><br>
             1.- Facturar a: SNC PHARMA, C.A. RIF: J-29855562-9, Dirección Fiscal: Centro Profesional<br>

@@ -30,6 +30,7 @@ Route::middleware(['auth'])->group(function () {
         // Rutas de órdenes para todos los usuarios
         Route::resource('orders', OrderController::class);
         Route::post('/orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+        Route::post('/orders/{order}/update-observations', [OrderController::class, 'updateObservations'])->name('orders.update-observations');
         Route::get('/orders/{order}/pdf', [OrderController::class, 'downloadPdf'])->name('orders.pdf');
 
         // Rutas de proveedores para todos los usuarios (excepto delete)

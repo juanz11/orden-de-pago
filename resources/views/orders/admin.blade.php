@@ -128,9 +128,20 @@
                                             </form>
                                         </div>
                                     @elseif($order->status === 'aprobado')
-                                        <a href="{{ route('orders.pdf', $order) }}" class="inline-block bg-gray-600  text-xs px-2 py-1 rounded hover:bg-gray-700" style="background-color: mediumaquamarine;">
-                                            Descargar PDF
-                                        </a>
+                                        <div class="space-y-2">
+                                            <form action="{{ route('orders.update-observations', $order) }}" method="POST" class="flex items-center space-x-2 mb-2">
+                                                @csrf
+                                                <textarea name="observations" placeholder="Observaciones adicionales"
+                                                    class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                                    rows="2">{{ $order->observations }}</textarea>
+                                                <button type="submit" class="bg-blue-600 text-white text-xs px-2 py-1 rounded hover:bg-blue-700">
+                                                    Guardar
+                                                </button>
+                                            </form>
+                                            <a href="{{ route('orders.pdf', $order) }}" class="inline-block bg-gray-600 text-white text-xs px-2 py-1 rounded hover:bg-gray-700" style="background-color: mediumaquamarine;">
+                                                Descargar PDF
+                                            </a>
+                                        </div>
                                     @endif
                                 </td>
                             </tr>

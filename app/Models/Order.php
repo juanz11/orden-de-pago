@@ -22,7 +22,8 @@ class Order extends Model
         'admin_id',
         'supplier_id',
         'other_supplier',
-        'total'
+        'total',
+        'observations'
     ];
 
     public function user()
