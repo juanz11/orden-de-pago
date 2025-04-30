@@ -10,7 +10,7 @@
         }
         body {
             font-family: Arial, sans-serif;
-            font-size: 12px;
+            font-size: 0.75em;
             line-height: 1.4;
             max-width: 184mm; /* 214mm - 30mm for margins */
             margin: 0 auto;
@@ -42,7 +42,7 @@
         }
         th, td {
             border: 1px solid #ddd;
-            padding: 8px;
+            padding: 1px;
             text-align: left;
         }
         th {
@@ -87,14 +87,14 @@
         <div class="company-info">
             <strong>SNC PHARMA, C.A.</strong><br>
             RIF: J-29855562-9<br>
-            Centro Profesional Irabo, Piso 2, Oficina 2-34<br>
+            Centro Profesional Prebo, Piso 2, Oficina 2-14<br>
             Valencia, Edo. Carabobo - Venezuela. Código Postal 2001.<br>
             Telef: (+58) 0241-8243176/8249323.<br>
-            Registrada MSDS No. C/R004.<br>
+            Registrada MSDS No. C/R 502.<br>
             Email: Soporte@sncpharma.com
         </div>
         <div class="order-number">
-            <h2>Orden de Compra<br>Nro. - {{ str_pad($order->id, 4, '0', STR_PAD_LEFT) }}</h2>
+            <h2>Orden de Compra Nro. {{ str_pad($order->id, 4, '0', STR_PAD_LEFT) }}</h2>
         </div>
     </div>
 
@@ -113,35 +113,35 @@
                     <strong>Contacto:</strong> {{ $order->supplier ? $order->supplier->contact_name : '' }}<br>
                     <strong>Condición de Pago:</strong> {{ $order->supplier ? $order->supplier->payment_condition : '' }}<br>
                     @if($order->exchange_rate)
-                    <strong>Tasa de cambio:</strong> {{ number_format($order->exchange_rate, 2, ',', '.') }} BsF/USD
+                    <strong>Tasa de cambio:</strong> {{ number_format($order->exchange_rate, 2, ',', '.') }} Bs/USD
                     @endif
                 </td>
             </tr>
         </table>
     </div>
 
-    <table>
+    <table style="width: 100%; border-collapse: collapse; font-size: 0.75em; margin-top: 8px;">
         <thead>
             <tr>
-                <th>Item</th>
-                <th>Descripción</th>
-                <th>Cantidad</th>
-                <th>Precio Unit. ({{ strtoupper($currency) }})</th>
-                <th>Monto ({{ strtoupper($currency) }})</th>
+                <th style="width: 7%; padding: 2px; text-align: left; border-bottom: 1px solid #000; font-size: 0.8em;">Item</th>
+                <th style="width: 43%; padding: 2px; text-align: left; border-bottom: 1px solid #000; font-size: 0.8em;">Descripción</th>
+                <th style="width: 8%; padding: 2px; text-align: center; border-bottom: 1px solid #000; font-size: 0.8em;">Cant</th>
+                <th style="width: 21%; padding: 2px; text-align: right; border-bottom: 1px solid #000; font-size: 0.8em;">Precio Unit. ({{ strtoupper($currency) }})</th>
+                <th style="width: 21%; padding: 2px; text-align: right; border-bottom: 1px solid #000; font-size: 0.8em;">Monto ({{ strtoupper($currency) }})</th>
             </tr>
         </thead>
         <tbody>
             @foreach($order->items as $item)
             <tr>
-                <td>00-{{ $loop->iteration }}</td>
-                <td>{{ $item->description }}</td>
-                <td>{{ $item->quantity }}</td>
+                <td style="padding: 1px 2px; text-align: left;">{{ $loop->iteration }}</td>
+                <td style="padding: 1px 2px; text-align: left;">{{ $item->description }}</td>
+                <td style="padding: 1px 2px; text-align: center;">{{ $item->quantity }}</td>
                 @if($currency === 'usd')
-                <td>$ {{ number_format($item->unit_price / $order->exchange_rate, 2, '.', ',') }}</td>
-                <td>$ {{ number_format(($item->quantity * $item->unit_price) / $order->exchange_rate, 2, '.', ',') }}</td>
+                <td style="padding: 1px 2px; text-align: right;">$ {{ number_format($item->unit_price / $order->exchange_rate, 2, '.', ',') }}</td>
+                <td style="padding: 1px 2px; text-align: right;">$ {{ number_format(($item->quantity * $item->unit_price) / $order->exchange_rate, 2, '.', ',') }}</td>
                 @else
-                <td>Bs.F {{ number_format($item->unit_price, 2, ',', '.') }}</td>
-                <td>Bs.F {{ number_format($item->quantity * $item->unit_price, 2, ',', '.') }}</td>
+                <td style="padding: 1px 2px; text-align: right;">Bs.F {{ number_format($item->unit_price, 2, ',', '.') }}</td>
+                <td style="padding: 1px 2px; text-align: right;">Bs.F {{ number_format($item->quantity * $item->unit_price, 2, ',', '.') }}</td>
                 @endif
             </tr>
             @endforeach
@@ -164,7 +164,7 @@
                             <td><strong>SUB-TOTAL (USD):</strong></td>
                             <td style="text-align: right;">$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
                             @else
-                            <td><strong>SUB-TOTAL (BsF):</strong></td>
+                            <td><strong>SUB-TOTAL (Bs):</strong></td>
                             <td style="text-align: right;">Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
                             @endif
                         </tr>
@@ -177,14 +177,14 @@
                             <td><strong>TOTAL (USD)</strong></td>
                             <td style="text-align: right;">$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
                             @else
-                            <td><strong>TOTAL (BsF)</strong></td>
+                            <td><strong>TOTAL (Bs)</strong></td>
                             <td style="text-align: right;">Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
                             @endif
                         </tr>
                         @if($currency === 'usd')
                         <tr>
                             <td colspan="2" style="text-align: right; font-size: 0.8em; padding-top: 10px;">
-                                * Montos convertidos usando tasa: {{ number_format($order->exchange_rate, 2, ',', '.') }} BsF/USD
+                                * Montos convertidos usando tasa: {{ number_format($order->exchange_rate, 2, ',', '.') }} Bs/USD
                             </td>
                         </tr>
                         @endif
