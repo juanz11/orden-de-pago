@@ -104,6 +104,15 @@ class Order extends Model
                 'color' => 'green'
             ];
         } elseif ($totalPercentage > 0) {
+            // Si hay pagos relacionados, mostrar el porcentaje actual
+            $payments = $this->payments()->count() + $this->relatedPayments()->count();
+            if ($payments > 1) {
+                return [
+                    'text' => 'Pago Parcial (' . number_format($totalPercentage, 1) . '%)',
+                    'color' => 'yellow'
+                ];
+            }
+            // Si es un único pago parcial
             return [
                 'text' => 'Pago Parcial (' . number_format($totalPercentage, 1) . '%)',
                 'color' => 'yellow'

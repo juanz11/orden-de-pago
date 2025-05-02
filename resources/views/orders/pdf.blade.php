@@ -207,7 +207,7 @@
             <tr>
                 <td style="width: 50%; padding: 20px; border: none;">
                     <div style="border-top: 1px solid black; text-align: center;">
-                        <div style="margin-top: 5px;">Jefe de Compras</div>
+                        <div style="margin-top: 5px;"></div>
                         <div>Joel A. Lopez J.</div>
                     </div>
                 </td>

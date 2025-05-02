@@ -79,9 +79,17 @@ class OrderController extends Controller
             $relatedOrder = Order::findOrFail($request->related_order_id);
             $remainingPercentage = 100 - ($relatedOrder->payments()->sum('percentage') + $relatedOrder->relatedPayments()->sum('percentage'));
             
+            if ($remainingPercentage <= 0) {
+                throw ValidationException::withMessages([
+                    'related_order_id' => ['Esta orden ya está pagada al 100%']
+                ]);
+            }
+            
             if ($request->payment_percentage > $remainingPercentage) {
                 throw ValidationException::withMessages([
-                    'payment_percentage' => ['El porcentaje de pago no puede exceder el porcentaje disponible (' . number_format($remainingPercentage, 1) . '%)']
+                    'payment_percentage' => [
+                        'El porcentaje de pago no puede exceder el porcentaje disponible (' . number_format($remainingPercentage, 1) . '%)'
+                    ]
                 ]);
             }
         }
