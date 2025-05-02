@@ -49,8 +49,13 @@ class OrderController extends Controller
     {
         $suppliers = Supplier::orderBy('name')->get();
         $orders = Order::where('status', 'aprobado')
-                      ->whereRaw('(SELECT COALESCE(SUM(percentage), 0) FROM order_payments WHERE order_id = orders.id OR related_order_id = orders.id) < 100')
-                      ->get();
+                      ->whereRaw('100 - (SELECT COALESCE(SUM(percentage), 0) FROM order_payments WHERE order_id = orders.id OR related_order_id = orders.id) > 0')
+                      ->with('supplier')
+                      ->get()
+                      ->map(function($order) {
+                          $order->remaining_percentage = 100 - ($order->payments()->sum('percentage') + $order->relatedPayments()->sum('percentage'));
+                          return $order;
+                      });
         
         return view('orders.create', compact('suppliers', 'orders'));
     }

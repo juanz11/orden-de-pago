@@ -89,6 +89,11 @@ class Order extends Model
         return $this->payments->sum('percentage') + $this->relatedPayments->sum('percentage');
     }
 
+    public function getRemainingPercentageAttribute()
+    {
+        return 100 - $this->total_paid_percentage;
+    }
+
     public function getPaymentStatusAttribute()
     {
         $totalPercentage = $this->total_paid_percentage;
@@ -100,10 +105,5 @@ class Order extends Model
         } else {
             return 'Pendiente';
         }
-    }
-
-    public function getRemainingPercentageAttribute()
-    {
-        return max(0, 100 - $this->total_paid_percentage);
     }
 }
