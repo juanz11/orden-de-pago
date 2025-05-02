@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\Supplier;
+use App\Models\OrderPayment;
 use App\Models\User;
 use App\Mail\NewOrderNotification;
 use App\Mail\OrderStatusNotification;
@@ -47,31 +48,34 @@ class OrderController extends Controller
     public function create()
     {
         $suppliers = Supplier::orderBy('name')->get();
-        return view('orders.create', compact('suppliers'));
+        $orders = Order::where('status', 'aprobado')
+                      ->whereRaw('(SELECT COALESCE(SUM(percentage), 0) FROM order_payments WHERE order_id = orders.id OR related_order_id = orders.id) < 100')
+                      ->get();
+        
+        return view('orders.create', compact('suppliers', 'orders'));
     }
 
     public function store(Request $request)
     {
+        $validatedData = $request->validate([
+            'supplier_id' => 'required_without:other_supplier',
+            'other_supplier' => 'required_without:supplier_id',
+            'items' => 'required|array|min:1',
+            'items.*.description' => 'required|string',
+            'items.*.quantity' => 'required|numeric|min:1',
+            'items.*.unit_price' => 'required|numeric|min:0',
+            'payment_type' => 'required|in:full,partial',
+            'payment_percentage' => 'required_if:payment_type,partial|numeric|min:1|max:100',
+            'related_order_id' => 'nullable|exists:orders,id',
+        ]);
+
+        DB::beginTransaction();
         try {
-            $request->validate([
-                'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
-                'other_supplier' => 'nullable|string|required_without:supplier_id',
-                'items' => 'required|array|min:1',
-                'items.*.description' => 'required|string',
-                'items.*.unit_price' => 'required|numeric|min:0',
-                'items.*.quantity' => 'required|integer|min:1',
-            ]);
-
-            DB::beginTransaction();
-
-            $order = new Order([
-                'supplier_id' => $request->supplier_id !== 'otro' ? $request->supplier_id : null,
-                'other_supplier' => $request->supplier_id === 'otro' ? $request->other_supplier : null,
-                'status' => 'pendiente',
-                'total' => 0
-            ]);
-
-            $order->user()->associate(auth()->user());
+            $order = new Order();
+            $order->user_id = auth()->id();
+            $order->supplier_id = $request->supplier_id !== 'otro' ? $request->supplier_id : null;
+            $order->other_supplier = $request->supplier_id === 'otro' ? $request->other_supplier : null;
+            $order->status = 'pendiente';
             $order->save();
 
             $total = 0;
@@ -87,29 +91,32 @@ class OrderController extends Controller
             $order->total = $total;
             $order->save();
 
+            // Si es un pago parcial, crear el registro de pago
+            if ($request->payment_type === 'partial') {
+                $payment = new OrderPayment([
+                    'order_id' => $order->id,
+                    'related_order_id' => $request->related_order_id,
+                    'percentage' => $request->payment_percentage,
+                    'amount' => $total,
+                    'status' => 'pendiente'
+                ]);
+                $payment->save();
+            }
+
             DB::commit();
 
+            // Enviar notificaciones
             try {
-                // Enviar correo al solicitante
-                Log::info('Enviando correo al solicitante: ' . $order->user->email);
-                Mail::to($order->user->email)
-                    ->send(new NewOrderNotification($order));
-
-                // Enviar correo a los administradores
+                Mail::to($order->user->email)->send(new NewOrderNotification($order));
                 $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
                 foreach ($admins as $admin) {
-                    Log::info('Enviando correo al administrador: ' . $admin->email);
-                    Mail::to($admin->email)
-                        ->send(new NewOrderNotification($order));
+                    Mail::to($admin->email)->send(new NewOrderNotification($order));
                 }
             } catch (\Exception $e) {
                 Log::error('Error al enviar correos: ' . $e->getMessage());
             }
 
-            return redirect()->route('orders.index')->with('success', 'Orden creada correctamente.');
-
-        } catch (ValidationException $e) {
-            return back()->withErrors($e->errors())->withInput();
+            return redirect()->route('orders.index')->with('success', 'Orden creada exitosamente.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error al crear orden: ' . $e->getMessage());

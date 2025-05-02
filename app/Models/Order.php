@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Supplier;
 use App\Models\OrderItem;
 use App\Models\OrderApproval;
+use App\Models\OrderPayment;
 
 class Order extends Model
 {
@@ -53,6 +54,16 @@ class Order extends Model
         return $this->hasMany(OrderApproval::class);
     }
 
+    public function payments()
+    {
+        return $this->hasMany(OrderPayment::class);
+    }
+
+    public function relatedPayments()
+    {
+        return $this->hasMany(OrderPayment::class, 'related_order_id');
+    }
+
     public function getApprovalCountAttribute()
     {
         return $this->approvals()->where('status', 'aprobado')->count();
@@ -71,5 +82,28 @@ class Order extends Model
     public function isFullyApproved()
     {
         return $this->approval_count >= 3;
+    }
+
+    public function getTotalPaidPercentageAttribute()
+    {
+        return $this->payments->sum('percentage') + $this->relatedPayments->sum('percentage');
+    }
+
+    public function getPaymentStatusAttribute()
+    {
+        $totalPercentage = $this->total_paid_percentage;
+        
+        if ($totalPercentage >= 100) {
+            return 'Pagado';
+        } elseif ($totalPercentage > 0) {
+            return 'Pago Parcial (' . $totalPercentage . '%)';
+        } else {
+            return 'Pendiente';
+        }
+    }
+
+    public function getRemainingPercentageAttribute()
+    {
+        return max(0, 100 - $this->total_paid_percentage);
     }
 }

@@ -36,7 +36,12 @@
                     <th class="py-3 px-6 text-left">Proveedor</th>
                     <th class="py-3 px-6 text-left">Productos</th>
                     <th class="py-3 px-6 text-left">Total</th>
-                    <th class="py-3 px-6 text-left">Estado</th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Estado
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Pago
+                    </th>
                     <th class="py-3 px-6 text-left">Fecha</th>
                     @if(auth()->user()->isAdmin())
                     <th class="py-3 px-6 text-left">Usuario</th>
@@ -70,12 +75,22 @@
                     <td class="py-3 px-6 text-left font-medium">
                         <x-format-currency :amount="$order->total" />
                     </td>
-                    <td class="py-3 px-6 text-left">
-                        <span class="@if($order->status === 'pendiente') text-yellow-600 @elseif($order->status === 'aprobado') text-green-600 @else text-red-600 @endif">
-                            {{ ucfirst($order->status) }}
-                        </span>
-                        @if($order->admin_comments)
-                        <p class="text-xs text-gray-500 mt-1">{{ $order->admin_comments }}</p>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ $order->status }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        @if($order->total_paid_percentage >= 100)
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Pagado (100%)
+                            </span>
+                        @elseif($order->total_paid_percentage > 0)
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                Parcial ({{ number_format($order->total_paid_percentage, 1) }}%)
+                            </span>
+                        @else
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                Pendiente (0%)
+                            </span>
                         @endif
                     </td>
                     <td class="py-3 px-6 text-left">{{ $order->created_at->format('d/m/Y H:i') }}</td>

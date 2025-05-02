@@ -41,6 +41,52 @@
                         @enderror
                     </div>
 
+                    <div>
+                        <label for="payment_type" class="block text-sm font-medium text-gray-700">Tipo de Pago</label>
+                        <select name="payment_type" id="payment_type" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="full">Total</option>
+                            <option value="partial">Parcial</option>
+                        </select>
+                        @error('payment_type')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div id="payment_percentage_container" class="hidden">
+                        <label for="payment_percentage" class="block text-sm font-medium text-gray-700">Porcentaje de Pago</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <input type="number" name="payment_percentage" id="payment_percentage" 
+                                   class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pr-12"
+                                   placeholder="0" min="1" max="100" step="1">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3">
+                                <span class="text-gray-500 sm:text-sm">%</span>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-sm text-gray-500" id="remaining_percentage_text"></p>
+                        @error('payment_percentage')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div id="related_order_container" class="hidden">
+                        <label for="related_order_id" class="block text-sm font-medium text-gray-700">Orden Relacionada</label>
+                        <select name="related_order_id" id="related_order_id" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            <option value="">Seleccionar orden...</option>
+                            @foreach($orders as $order)
+                                <option value="{{ $order->id }}" data-remaining="{{ $order->remaining_percentage }}">
+                                    Orden #{{ str_pad($order->id, 4, '0', STR_PAD_LEFT) }} - 
+                                    {{ $order->supplier ? $order->supplier->name : $order->other_supplier }}
+                                    (Pagado: {{ number_format($order->total_paid_percentage, 1) }}% - Disponible: {{ number_format($order->remaining_percentage, 1) }}%)
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('related_order_id')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <div id="items_container">
                         <div class="mb-4">
                             <h3 class="text-lg font-medium">Productos</h3>
@@ -133,6 +179,56 @@ document.addEventListener('DOMContentLoaded', function() {
     let itemCount = 1;
     const bcvRate = parseFloat(document.querySelector('.exchange-rate-value')?.dataset?.rate || 0);
 
+    // Manejo de la condición de pago
+    const paymentTypeSelect = document.getElementById('payment_type');
+    const percentageContainer = document.getElementById('payment_percentage_container');
+    const relatedOrderContainer = document.getElementById('related_order_container');
+    const percentageInput = document.getElementById('payment_percentage');
+    const relatedOrderSelect = document.getElementById('related_order_id');
+    const remainingText = document.getElementById('remaining_percentage_text');
+
+    // Mostrar/ocultar campos según el tipo de pago
+    paymentTypeSelect?.addEventListener('change', function() {
+        const isPartial = this.value === 'partial';
+        percentageContainer.classList.toggle('hidden', !isPartial);
+        relatedOrderContainer.classList.toggle('hidden', !isPartial);
+        
+        if (!isPartial) {
+            percentageInput.value = '';
+            relatedOrderSelect.value = '';
+            remainingText.textContent = '';
+        }
+    });
+
+    // Actualizar información cuando se selecciona una orden relacionada
+    relatedOrderSelect?.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+            const remainingPercentage = selectedOption.dataset.remaining;
+            remainingText.textContent = `Porcentaje disponible para pago: ${remainingPercentage}%`;
+            percentageInput.max = remainingPercentage;
+            if (parseFloat(percentageInput.value) > parseFloat(remainingPercentage)) {
+                percentageInput.value = remainingPercentage;
+            }
+        } else {
+            remainingText.textContent = '';
+            percentageInput.max = 100;
+        }
+    });
+
+    // Validar que el porcentaje no exceda el máximo permitido
+    percentageInput?.addEventListener('input', function() {
+        const selectedOption = relatedOrderSelect.options[relatedOrderSelect.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+            const remainingPercentage = parseFloat(selectedOption.dataset.remaining);
+            const currentValue = parseFloat(this.value);
+            if (currentValue > remainingPercentage) {
+                this.value = remainingPercentage;
+            }
+        }
+    });
+
+    // Resto del código existente...
     window.toggleOtherSupplier = function(value) {
         const otherSupplierDiv = document.getElementById('other_supplier_div');
         otherSupplierDiv.style.display = value === 'otro' ? 'block' : 'none';
