@@ -269,4 +269,26 @@ class OrderController extends Controller
         
         return $pdf->download('orden-' . str_pad($order->id, 4, '0', STR_PAD_LEFT) . '.pdf');
     }
+
+    public function downloadPaymentOrder(Order $order, Request $request)
+    {
+        $currency = $request->query('currency', 'bsf');
+        
+        // Formatear números para Bs con punto como separador de miles
+        $formatNumber = function($number) use ($currency, $order) {
+            if ($currency === 'usd' && $order->exchange_rate) {
+                return '$ ' . number_format($number / $order->exchange_rate, 2, ',', '.');
+            }
+            return 'Bs. ' . number_format($number, 2, ',', '.');
+        };
+
+        $pdf = PDF::loadView('pdf.payment-order', [
+            'order' => $order,
+            'currency' => $currency,
+            'formatNumber' => $formatNumber
+        ]);
+
+        $currencyText = $currency === 'usd' ? 'usd' : 'bs';
+        return $pdf->download('orden-pago-' . str_pad($order->id, 4, '0', STR_PAD_LEFT) . '-' . $currencyText . '.pdf');
+    }
 }

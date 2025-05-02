@@ -143,17 +143,33 @@
                             @endif
 
                             @if($order->status === 'aprobado')
-                                <div class="flex items-center space-x-2" style="background-color: mediumaquamarine">
-                                    <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bsf']) }}" 
-                                       class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                        Descargar PDF (BsF)
-                                    </a>
-                                    @if($order->exchange_rate)
-                                    <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'usd']) }}" 
-                                       class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                        Descargar PDF (USD)
-                                    </a>
-                                    @endif
+                                <div class="space-y-2">
+                                    <div class="flex items-center space-x-2 mb-2">
+                                        <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bsf']) }}" 
+                                           class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
+                                            Orden de Compra (BsF)
+                                        </a>
+                                        @if($order->exchange_rate)
+                                        <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'usd']) }}" 
+                                           class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                            Orden de Compra (USD)
+                                        </a>
+                                        @endif
+                                    </div>
+                                    <div class="border-t border-gray-200 pt-2">
+                                        <div class="flex items-center space-x-2">
+                                            <a href="{{ route('orders.payment-pdf', ['order' => $order, 'currency' => 'bsf']) }}" 
+                                               class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" style="background-color: palevioletred;">
+                                                Orden de Pago (BsF)
+                                            </a>
+                                            @if($order->exchange_rate)
+                                            <a href="{{ route('orders.payment-pdf', ['order' => $order, 'currency' => 'usd']) }}" 
+                                               class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                Orden de Pago (USD)
+                                            </a>
+                                            @endif
+                                        </div>
+                                    </div>
                                 </div>
                             @endif
                         </div>
