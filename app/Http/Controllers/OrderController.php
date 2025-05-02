@@ -70,8 +70,8 @@ class OrderController extends Controller
             'items.*.quantity' => 'required|numeric|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
             'payment_type' => 'required|in:full,partial',
-            'payment_percentage' => 'required_if:payment_type,partial|numeric|min:1|max:100',
-            'related_order_id' => 'nullable|exists:orders,id',
+            'payment_percentage' => 'required_if:payment_type,partial|nullable|numeric|min:1|max:100',
+            'related_order_id' => 'required_if:payment_type,partial|nullable|exists:orders,id',
         ]);
 
         DB::beginTransaction();
@@ -80,7 +80,7 @@ class OrderController extends Controller
             $order->user_id = auth()->id();
             $order->supplier_id = $request->supplier_id !== 'otro' ? $request->supplier_id : null;
             $order->other_supplier = $request->supplier_id === 'otro' ? $request->other_supplier : null;
-            $order->status = 'pendiente';
+            $order->status = Order::STATUS_PENDING;
             $order->save();
 
             $total = 0;
@@ -96,17 +96,25 @@ class OrderController extends Controller
             $order->total = $total;
             $order->save();
 
-            // Si es un pago parcial, crear el registro de pago
+            // Crear el registro de pago
             if ($request->payment_type === 'partial') {
                 $payment = new OrderPayment([
                     'order_id' => $order->id,
                     'related_order_id' => $request->related_order_id,
                     'percentage' => $request->payment_percentage,
-                    'amount' => $total,
-                    'status' => 'pendiente'
+                    'amount' => $total * ($request->payment_percentage / 100),
+                    'status' => Order::STATUS_PENDING
                 ]);
-                $payment->save();
+            } else {
+                // Si es pago total, crear un pago por el 100%
+                $payment = new OrderPayment([
+                    'order_id' => $order->id,
+                    'percentage' => 100,
+                    'amount' => $total,
+                    'status' => Order::STATUS_PENDING
+                ]);
             }
+            $payment->save();
 
             DB::commit();
 

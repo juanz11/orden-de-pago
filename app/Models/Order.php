@@ -99,11 +99,20 @@ class Order extends Model
         $totalPercentage = $this->total_paid_percentage;
         
         if ($totalPercentage >= 100) {
-            return 'Pagado';
+            return [
+                'text' => 'Pago Total',
+                'color' => 'green'
+            ];
         } elseif ($totalPercentage > 0) {
-            return 'Pago Parcial (' . $totalPercentage . '%)';
+            return [
+                'text' => 'Pago Parcial (' . number_format($totalPercentage, 1) . '%)',
+                'color' => 'yellow'
+            ];
         } else {
-            return 'Pendiente';
+            return [
+                'text' => 'Pendiente',
+                'color' => 'red'
+            ];
         }
     }
 }

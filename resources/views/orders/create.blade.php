@@ -56,9 +56,10 @@
                     <div id="payment_percentage_container" class="hidden">
                         <label for="payment_percentage" class="block text-sm font-medium text-gray-700">Porcentaje de Pago</label>
                         <div class="mt-1 relative rounded-md shadow-sm">
-                            <input type="number" name="payment_percentage" id="payment_percentage" 
+                            <input type="hidden" name="payment_percentage" id="payment_percentage_hidden" value="">
+                            <input type="text" id="payment_percentage" 
                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pr-12"
-                                   placeholder="0" min="1" max="100" step="1">
+                                   placeholder="0" pattern="[0-9]*" inputmode="numeric">
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                                 <span class="text-gray-500 sm:text-sm">%</span>
                             </div>
@@ -161,9 +162,13 @@
                             class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
                             Cancelar
                         </a>
-                        <button type="submit"
+                        <button type="submit" id="submit-button"
                             class="inline-flex items-center px-4 py-2 bg-blue-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-blue-500" style="background-color: cornflowerblue;">
-                            Crear Orden
+                            <svg id="loading-spinner" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span id="button-text">Crear Orden</span>
                         </button>
                     </div>
                 </form>
@@ -178,6 +183,58 @@
 document.addEventListener('DOMContentLoaded', function() {
     let itemCount = 1;
     const bcvRate = parseFloat(document.querySelector('.exchange-rate-value')?.dataset?.rate || 0);
+    const form = document.querySelector('form');
+    const submitButton = document.getElementById('submit-button');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const buttonText = document.getElementById('button-text');
+    const paymentPercentageInput = document.getElementById('payment_percentage');
+    const paymentPercentageHidden = document.getElementById('payment_percentage_hidden');
+
+    // Validate payment percentage input
+    paymentPercentageInput?.addEventListener('input', function(e) {
+        // Remove any non-numeric characters
+        let value = this.value.replace(/[^0-9]/g, '');
+        
+        // Convert to number and validate range
+        let numValue = parseInt(value) || 0;
+        if (numValue > 100) numValue = 100;
+        if (numValue < 0) numValue = 0;
+        
+        // Update input values
+        this.value = numValue;
+        paymentPercentageHidden.value = numValue;
+
+        // Check related order's remaining percentage
+        const relatedOrderSelect = document.getElementById('related_order_id');
+        const selectedOption = relatedOrderSelect.options[relatedOrderSelect.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+            const remainingPercentage = parseFloat(selectedOption.dataset.remaining);
+            if (numValue > remainingPercentage) {
+                this.value = Math.floor(remainingPercentage);
+                paymentPercentageHidden.value = this.value;
+            }
+        }
+    });
+
+    // Form submission handler
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Set payment percentage for full payment
+        const paymentType = document.getElementById('payment_type').value;
+        if (paymentType === 'full') {
+            paymentPercentageHidden.value = '100';
+        }
+        
+        // Disable button and show loading state
+        submitButton.disabled = true;
+        submitButton.style.opacity = '0.75';
+        loadingSpinner.classList.remove('hidden');
+        buttonText.textContent = 'Creando...';
+
+        // Submit the form
+        this.submit();
+    });
 
     // Manejo de la condición de pago
     const paymentTypeSelect = document.getElementById('payment_type');
@@ -194,7 +251,13 @@ document.addEventListener('DOMContentLoaded', function() {
         relatedOrderContainer.classList.toggle('hidden', !isPartial);
         
         if (!isPartial) {
+            percentageInput.value = '100';
+            paymentPercentageHidden.value = '100';
+            relatedOrderSelect.value = '';
+            remainingText.textContent = '';
+        } else {
             percentageInput.value = '';
+            paymentPercentageHidden.value = '';
             relatedOrderSelect.value = '';
             remainingText.textContent = '';
         }
@@ -209,6 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
             percentageInput.max = remainingPercentage;
             if (parseFloat(percentageInput.value) > parseFloat(remainingPercentage)) {
                 percentageInput.value = remainingPercentage;
+                paymentPercentageHidden.value = percentageInput.value;
             }
         } else {
             remainingText.textContent = '';
@@ -224,6 +288,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const currentValue = parseFloat(this.value);
             if (currentValue > remainingPercentage) {
                 this.value = remainingPercentage;
+                paymentPercentageHidden.value = this.value;
             }
         }
     });

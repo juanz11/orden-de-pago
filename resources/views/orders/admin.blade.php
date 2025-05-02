@@ -78,23 +78,19 @@
                     <td class="py-3 px-6 text-left font-medium">
                         <x-format-currency :amount="$order->total" />
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $order->status }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        @if($order->total_paid_percentage >= 100)
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Pagado (100%)
-                            </span>
-                        @elseif($order->total_paid_percentage > 0)
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Parcial ({{ number_format($order->total_paid_percentage, 1) }}%)
-                            </span>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        @if($order->status === 'pendiente')
+                            <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">Pendiente</span>
+                        @elseif($order->status === 'aprobado')
+                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Aprobado</span>
                         @else
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                Pendiente (0%)
-                            </span>
+                            <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">Rechazado</span>
                         @endif
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="bg-{{ $order->payment_status['color'] }}-100 text-{{ $order->payment_status['color'] }}-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                            {{ $order->payment_status['text'] }}
+                        </span>
                     </td>
                     <td class="py-3 px-6 text-left">
                         {{ $order->created_at->format('d/m/Y H:i') }}

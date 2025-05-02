@@ -52,7 +52,6 @@
             <tbody class="text-gray-600 text-sm font-light">
                 @foreach($orders as $order)
                 <tr class="border-b border-black-200 hover:bg-gray-100">
-                   
                     <td class="py-3 px-6 text-left">
                         @if($order->supplier)
                             {{ $order->supplier->name }}
@@ -60,38 +59,27 @@
                             {{ $order->other_supplier }}
                         @endif
                     </td>
-                    <td class="py-3 px-6">
-                        <div class="space-y-1">
+                    <td class="py-3 px-6 text-left">
+                        <ul class="list-disc list-inside">
                             @foreach($order->items as $item)
-                            <div class="flex justify-between text-sm">
-                                <span class="font-medium">{{ $item->description }}</span>
-                                <span class="text-gray-500">
-                                    {{ $item->quantity }} x <x-format-currency :amount="$item->unit_price" />
-                                </span>
-                            </div>
+                            <li>{{ $item->description }} ({{ $item->quantity }} x {{ number_format($item->unit_price, 2) }} Bs.)</li>
                             @endforeach
-                        </div>
+                        </ul>
                     </td>
-                    <td class="py-3 px-6 text-left font-medium">
-                        <x-format-currency :amount="$order->total" />
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {{ $order->status }}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm">
-                        @if($order->total_paid_percentage >= 100)
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                Pagado (100%)
-                            </span>
-                        @elseif($order->total_paid_percentage > 0)
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                Parcial ({{ number_format($order->total_paid_percentage, 1) }}%)
-                            </span>
+                    <td class="py-3 px-6 text-left">{{ number_format($order->total, 2) }} Bs.</td>
+                    <td class="py-3 px-6">
+                        @if($order->status === 'pendiente')
+                            <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">Pendiente</span>
+                        @elseif($order->status === 'aprobado')
+                            <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">Aprobado</span>
                         @else
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                Pendiente (0%)
-                            </span>
+                            <span class="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded">Rechazado</span>
                         @endif
+                    </td>
+                    <td class="py-3 px-6">
+                        <span class="bg-{{ $order->payment_status['color'] }}-100 text-{{ $order->payment_status['color'] }}-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                            {{ $order->payment_status['text'] }}
+                        </span>
                     </td>
                     <td class="py-3 px-6 text-left">{{ $order->created_at->format('d/m/Y H:i') }}</td>
                     @if(auth()->user()->isAdmin())
