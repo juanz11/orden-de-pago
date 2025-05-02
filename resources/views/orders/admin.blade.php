@@ -81,23 +81,18 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <x-format-currency :amount="$order->total" />
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    @if($order->status === 'pendiente')
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                            Pendiente
-                                        </span>
-                                    @elseif($order->status === 'aprobado')
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                            Aprobado
-                                        </span>
-                                    @else
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                            Rechazado
-                                        </span>
-                                    @endif
-                                    @if($order->admin_comments)
-                                        <p class="text-xs text-gray-500 mt-1">{{ $order->admin_comments }}</p>
-                                    @endif
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm text-gray-900">{{ $order->status }}</span>
+                                        @if($order->status === 'pendiente')
+                                            <span class="text-xs text-gray-500">
+                                                Aprobaciones: {{ $order->approval_progress }}
+                                                @if($order->hasUserApproved(auth()->id()))
+                                                    (Ya has aprobado)
+                                                @endif
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     {{ $order->created_at->format('d/m/Y H:i') }}
@@ -105,21 +100,23 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
                                     @if($order->status === 'pendiente')
                                         <div class="space-y-2">
-                                            <a href="{{ route('orders.edit', $order) }}" class="inline-block bg-blue-600  text-xs px-2 py-1 rounded hover:bg-blue-700 mb-2" style="background-color: cadetblue;">
+                                            <a href="{{ route('orders.edit', $order) }}" class="inline-block bg-blue-600  text-xs px-2 py-1 rounded hover:bg-blue-700" style="background-color: cadetblue;">
                                                 Editar
                                             </a>
                                             <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex items-center space-x-2">
                                                 @csrf
                                                 <input type="hidden" name="status" value="aprobado">
                                                 <div class="flex flex-col space-y-2">
-                                                    <input type="number" name="exchange_rate" step="0.01" min="0" placeholder="Tasa de cambio BsF/USD"
-                                                        class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                                    @if($order->approval_count === 2)
+                                                        <input type="number" name="exchange_rate" step="0.01" min="0" placeholder="Tasa de cambio BsF/USD"
+                                                            class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" required>
+                                                    @endif
                                                     <input type="text" name="admin_comments" placeholder="Comentarios"
                                                         class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                                    <button type="submit" class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                        Aprobar
+                                                    </button>
                                                 </div>
-                                                <button type="submit" class="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">
-                                                    Aprobar
-                                                </button>
                                             </form>
                                             <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex items-center space-x-2">
                                                 @csrf

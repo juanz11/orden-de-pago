@@ -181,47 +181,49 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, Order $order)
     {
-        if (!auth()->user()->isAdmin()) {
-            abort(403, 'No tienes permiso para realizar esta acción.');
-        }
-
         $request->validate([
             'status' => 'required|in:aprobado,rechazado',
             'admin_comments' => 'nullable|string',
-            'exchange_rate' => 'required_if:status,aprobado|numeric|min:0'
+            'exchange_rate' => 'required_if:approval_count,2|numeric|min:0'
         ]);
 
-        try {
+        $existingApproval = $order->approvals()->where('admin_id', auth()->id())->first();
+        
+        if ($existingApproval) {
+            return redirect()->back()->with('error', 'Ya has registrado tu aprobación para esta orden.');
+        }
+
+        // Crear nueva aprobación
+        $order->approvals()->create([
+            'admin_id' => auth()->id(),
+            'status' => $request->status,
+            'comments' => $request->admin_comments
+        ]);
+
+        // Actualizar el conteo después de crear la nueva aprobación
+        $approvalCount = $order->fresh()->approval_count;
+
+        // Solo actualizar el estado de la orden si hay 3 aprobaciones
+        if ($request->status === 'aprobado' && $approvalCount >= 3) {
             $order->update([
-                'status' => $request->status,
-                'admin_comments' => $request->admin_comments,
+                'status' => 'aprobado',
                 'admin_id' => auth()->id(),
                 'exchange_rate' => $request->exchange_rate
             ]);
 
-            try {
-                // Enviar correo al creador de la orden
-                Log::info('Enviando correo de actualización de estado al solicitante: ' . $order->user->email);
-                Mail::to($order->user->email)
-                    ->send(new OrderStatusNotification($order));
+            // Enviar notificación
+            Mail::to($order->user->email)->send(new OrderStatusNotification($order));
+        } elseif ($request->status === 'rechazado') {
+            $order->update([
+                'status' => 'rechazado',
+                'admin_id' => auth()->id()
+            ]);
 
-                // Enviar correo a los administradores
-                $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
-                foreach ($admins as $admin) {
-                    Log::info('Enviando correo de actualización de estado al administrador: ' . $admin->email);
-                    Mail::to($admin->email)
-                        ->send(new OrderStatusNotification($order));
-                }
-            } catch (\Exception $e) {
-                Log::error('Error al enviar correos de actualización de estado: ' . $e->getMessage());
-            }
-
-            return redirect()->route('orders.admin')
-                ->with('success', 'Estado de la orden actualizado exitosamente.');
-        } catch (\Exception $e) {
-            Log::error('Error al actualizar estado de la orden: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al actualizar estado de la orden. Por favor, inténtalo de nuevo.');
+            // Enviar notificación
+            Mail::to($order->user->email)->send(new OrderStatusNotification($order));
         }
+
+        return redirect()->back()->with('success', 'Tu aprobación ha sido registrada. La orden requiere 3 aprobaciones para cambiar de estado.');
     }
 
     public function updateObservations(Request $request, Order $order)
