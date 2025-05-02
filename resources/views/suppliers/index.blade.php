@@ -33,7 +33,7 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dirección</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacto</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Condición Pago</th>
+                
                                 <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                             </tr>
                         </thead>
@@ -45,7 +45,6 @@
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $supplier->phone }}</td>
                                     <td class="px-6 py-4">{{ $supplier->address ?: '-' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $supplier->contact_name ?: '-' }}</td>
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $supplier->payment_condition ?: '-' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="{{ route('suppliers.edit', $supplier) }}" class="text-indigo-600 hover:text-indigo-900">Editar</a>
                                         @if(auth()->user()->isAdmin())
