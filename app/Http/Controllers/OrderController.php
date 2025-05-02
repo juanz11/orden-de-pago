@@ -246,26 +246,17 @@ class OrderController extends Controller
         return redirect()->back()->with('success', 'Tu aprobación ha sido registrada. La orden requiere 3 aprobaciones para cambiar de estado.');
     }
 
-    public function updateObservations(Request $request, Order $order)
+    public function updateObservations(Order $order, Request $request)
     {
-        try {
-            $request->validate([
-                'observations' => 'required|string|max:1000'
-            ]);
+        $request->validate([
+            'observations' => 'nullable|string|max:500'
+        ]);
 
-            \Log::info('Actualizando observaciones para orden #' . $order->id, [
-                'observations' => $request->observations
-            ]);
+        $order->update([
+            'observations' => $request->observations
+        ]);
 
-            $order->update([
-                'observations' => $request->observations
-            ]);
-
-            return redirect()->back()->with('success', 'Observaciones actualizadas correctamente');
-        } catch (\Exception $e) {
-            \Log::error('Error al actualizar observaciones: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al actualizar observaciones: ' . $e->getMessage());
-        }
+        return back()->with('success', 'Observaciones actualizadas correctamente.');
     }
 
     public function downloadPdf(Order $order, Request $request)

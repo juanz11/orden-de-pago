@@ -174,6 +174,20 @@
                                             @endif
                                         </div>
                                     </div>
+                                    <div class="border-t border-gray-200 pt-2">
+                                        <form action="{{ route('orders.update-observations', $order) }}" method="POST" class="flex items-end space-x-2">
+                                            @csrf
+                                            @method('PATCH')
+                                            <div class="flex-grow">
+                                                <label for="observations" class="block text-xs font-medium text-gray-700 mb-1">Observaciones para la orden de pago:</label>
+                                                <textarea name="observations" id="observations" rows="2" 
+                                                    class="block w-full text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ $order->observations }}</textarea>
+                                            </div>
+                                            <button type="submit" class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                                Guardar
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             @endif
                         </div>
