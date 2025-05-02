@@ -142,7 +142,12 @@
                             @if($order->status === 'aprobado')
                                 <div class="space-y-2">
                                     <div class="flex items-center space-x-2 mb-2">
-                                        <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bs']) }}" 
+                                        <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bs']) }}" style="
+                                           background-color: var(--color-blue-700);
+                                           class=;
+                                           color: white;
+                                           font-weight: bold;
+                                           ";
                                            class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
                                             Orden de Compra (Bs)
                                         </a>
@@ -156,12 +161,14 @@
                                     <div class="border-t border-gray-200 pt-2">
                                         <div class="flex items-center space-x-2">
                                             <a href="{{ route('orders.payment-pdf', ['order' => $order, 'currency' => 'bs']) }}" 
-                                               class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" style="background-color: palevioletred;">
+                                               class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" style="background-color: var(--color-blue-700);">
                                                 Orden de Pago (Bs)
                                             </a>
                                             @if($order->exchange_rate)
                                             <a href="{{ route('orders.payment-pdf', ['order' => $order, 'currency' => 'usd']) }}" 
-                                               class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                               class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" style="
+    background-color: var(--color-green-700);
+">
                                                 Orden de Pago (USD)
                                             </a>
                                             @endif
