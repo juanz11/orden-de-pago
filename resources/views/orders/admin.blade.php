@@ -110,7 +110,7 @@
                                         <div class="flex flex-col space-y-2">
                                             @if($order->approval_count === 2)
                                                 <input type="number" name="exchange_rate" step="0.01" min="0" 
-                                                       placeholder="Tasa BsF/USD"
+                                                       placeholder="Tasa Bs/USD"
                                                        class="text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                             @endif
                                             <input type="text" name="admin_comments" 
@@ -142,9 +142,9 @@
                             @if($order->status === 'aprobado')
                                 <div class="space-y-2">
                                     <div class="flex items-center space-x-2 mb-2">
-                                        <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bsf']) }}" 
+                                        <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bs']) }}" 
                                            class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500">
-                                            Orden de Compra (BsF)
+                                            Orden de Compra (Bs)
                                         </a>
                                         @if($order->exchange_rate)
                                         <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'usd']) }}" 
@@ -155,9 +155,9 @@
                                     </div>
                                     <div class="border-t border-gray-200 pt-2">
                                         <div class="flex items-center space-x-2">
-                                            <a href="{{ route('orders.payment-pdf', ['order' => $order, 'currency' => 'bsf']) }}" 
+                                            <a href="{{ route('orders.payment-pdf', ['order' => $order, 'currency' => 'bs']) }}" 
                                                class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" style="background-color: palevioletred;">
-                                                Orden de Pago (BsF)
+                                                Orden de Pago (Bs)
                                             </a>
                                             @if($order->exchange_rate)
                                             <a href="{{ route('orders.payment-pdf', ['order' => $order, 'currency' => 'usd']) }}" 

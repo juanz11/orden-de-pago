@@ -277,7 +277,7 @@ class OrderController extends Controller
         $order->load(['user', 'supplier', 'items']);
 
         // Validar moneda
-        $currency = $request->query('currency', 'bsf');
+        $currency = $request->query('currency', 'bs');
         if ($currency === 'usd' && !$order->exchange_rate) {
             return back()->with('error', 'La orden necesita una tasa de cambio para ser descargada en USD.');
         }
@@ -292,7 +292,7 @@ class OrderController extends Controller
 
     public function downloadPaymentOrder(Order $order, Request $request)
     {
-        $currency = $request->query('currency', 'bsf');
+        $currency = $request->query('currency', 'bs');
         
         // Formatear números para Bs con punto como separador de miles
         $formatNumber = function($number) use ($currency, $order) {
