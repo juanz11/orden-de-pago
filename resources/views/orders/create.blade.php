@@ -46,20 +46,21 @@
                         <select name="payment_type" id="payment_type" 
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             <option value="full">Total</option>
-                            <option value="partial">Parcial</option>
+                            <option value="partial" {{ old('payment_type') == 'partial' ? 'selected' : '' }}>Parcial</option>
                         </select>
                         @error('payment_type')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
 
-                    <div id="payment_percentage_container" class="hidden">
+                    <div id="payment_percentage_container" class="hidden {{ old('payment_type') == 'partial' ? '' : 'hidden' }}">
                         <label for="payment_percentage" class="block text-sm font-medium text-gray-700">Porcentaje de Pago</label>
                         <div class="mt-1 relative rounded-md shadow-sm">
-                            <input type="hidden" name="payment_percentage" id="payment_percentage_hidden" value="">
+                            <input type="hidden" name="payment_percentage" id="payment_percentage_hidden" value="{{ old('payment_percentage') }}">
                             <input type="text" id="payment_percentage" 
                                    class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 pr-12"
-                                   placeholder="0" pattern="[0-9]*" inputmode="numeric">
+                                   placeholder="0" pattern="[0-9]*" inputmode="numeric"
+                                   value="{{ old('payment_percentage') }}">
                             <div class="absolute inset-y-0 right-0 flex items-center pr-3">
                                 <span class="text-gray-500 sm:text-sm">%</span>
                             </div>
@@ -70,19 +71,25 @@
                         @enderror
                     </div>
 
-                    <div id="related_order_container" class="hidden">
-                        <label for="related_order_id" class="block text-sm font-medium text-gray-700">Orden Relacionada</label>
+                    <div id="related_order_container" class="hidden {{ old('payment_type') == 'partial' ? '' : 'hidden' }}">
+                        <label for="related_order_id" class="block text-sm font-medium text-gray-700">
+                            Orden Relacionada (Opcional)
+                            <span class="text-sm text-gray-500">- Solo si este pago es parte de una orden existente</span>
+                        </label>
                         <select name="related_order_id" id="related_order_id" 
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="">Seleccionar orden...</option>
+                            <option value="">Sin relación con otra orden</option>
                             @foreach($orders as $order)
-                                <option value="{{ $order->id }}" data-remaining="{{ $order->remaining_percentage }}">
+                                <option value="{{ $order->id }}" 
+                                    data-remaining="{{ $order->remaining_percentage }}"
+                                    {{ old('related_order_id') == $order->id ? 'selected' : '' }}>
                                     Orden #{{ str_pad($order->id, 4, '0', STR_PAD_LEFT) }} - 
                                     {{ $order->supplier ? $order->supplier->name : $order->other_supplier }}
                                     (Pagado: {{ number_format($order->total_paid_percentage, 1) }}% - Disponible: {{ number_format($order->remaining_percentage, 1) }}%)
                                 </option>
                             @endforeach
                         </select>
+                        <p class="mt-1 text-sm text-gray-500">Si este es el primer pago parcial, no necesitas seleccionar una orden relacionada.</p>
                         @error('related_order_id')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
@@ -249,49 +256,49 @@ document.addEventListener('DOMContentLoaded', function() {
         const isPartial = this.value === 'partial';
         percentageContainer.classList.toggle('hidden', !isPartial);
         relatedOrderContainer.classList.toggle('hidden', !isPartial);
-        
         if (!isPartial) {
             percentageInput.value = '100';
             paymentPercentageHidden.value = '100';
             relatedOrderSelect.value = '';
-            remainingText.textContent = '';
         } else {
             percentageInput.value = '';
             paymentPercentageHidden.value = '';
-            relatedOrderSelect.value = '';
-            remainingText.textContent = '';
         }
     });
 
-    // Actualizar información cuando se selecciona una orden relacionada
+    // Inicializar estado de campos al cargar la página
+    if (paymentTypeSelect) {
+        const isPartial = paymentTypeSelect.value === 'partial';
+        percentageContainer.classList.toggle('hidden', !isPartial);
+        relatedOrderContainer.classList.toggle('hidden', !isPartial);
+        if (!isPartial) {
+            percentageInput.value = '100';
+            paymentPercentageHidden.value = '100';
+        }
+    }
+
+    // Actualizar texto de porcentaje restante al cambiar orden relacionada
     relatedOrderSelect?.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         if (selectedOption && selectedOption.value) {
-            const remainingPercentage = selectedOption.dataset.remaining;
-            remainingText.textContent = `Porcentaje disponible para pago: ${remainingPercentage}%`;
-            percentageInput.max = remainingPercentage;
-            if (parseFloat(percentageInput.value) > parseFloat(remainingPercentage)) {
-                percentageInput.value = remainingPercentage;
-                paymentPercentageHidden.value = percentageInput.value;
+            const remainingPercentage = parseFloat(selectedOption.dataset.remaining);
+            remainingText.textContent = `Porcentaje disponible: ${remainingPercentage}%`;
+            if (percentageInput.value) {
+                const currentValue = parseFloat(percentageInput.value);
+                if (currentValue > remainingPercentage) {
+                    percentageInput.value = Math.floor(remainingPercentage);
+                    paymentPercentageHidden.value = percentageInput.value;
+                }
             }
         } else {
             remainingText.textContent = '';
-            percentageInput.max = 100;
         }
     });
 
-    // Validar que el porcentaje no exceda el máximo permitido
-    percentageInput?.addEventListener('input', function() {
-        const selectedOption = relatedOrderSelect.options[relatedOrderSelect.selectedIndex];
-        if (selectedOption && selectedOption.value) {
-            const remainingPercentage = parseFloat(selectedOption.dataset.remaining);
-            const currentValue = parseFloat(this.value);
-            if (currentValue > remainingPercentage) {
-                this.value = remainingPercentage;
-                paymentPercentageHidden.value = this.value;
-            }
-        }
-    });
+    // Trigger change event on page load if there's a selected order
+    if (relatedOrderSelect && relatedOrderSelect.value) {
+        relatedOrderSelect.dispatchEvent(new Event('change'));
+    }
 
     // Resto del código existente...
     window.toggleOtherSupplier = function(value) {

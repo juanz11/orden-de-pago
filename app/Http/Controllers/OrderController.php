@@ -71,8 +71,20 @@ class OrderController extends Controller
             'items.*.unit_price' => 'required|numeric|min:0',
             'payment_type' => 'required|in:full,partial',
             'payment_percentage' => 'required_if:payment_type,partial|nullable|numeric|min:1|max:100',
-            'related_order_id' => 'required_if:payment_type,partial|nullable|exists:orders,id',
+            'related_order_id' => 'nullable|exists:orders,id',
         ]);
+
+        // Validación adicional para pagos parciales relacionados
+        if ($request->payment_type === 'partial' && $request->related_order_id) {
+            $relatedOrder = Order::findOrFail($request->related_order_id);
+            $remainingPercentage = 100 - ($relatedOrder->payments()->sum('percentage') + $relatedOrder->relatedPayments()->sum('percentage'));
+            
+            if ($request->payment_percentage > $remainingPercentage) {
+                throw ValidationException::withMessages([
+                    'payment_percentage' => ['El porcentaje de pago no puede exceder el porcentaje disponible (' . number_format($remainingPercentage, 1) . '%)']
+                ]);
+            }
+        }
 
         DB::beginTransaction();
         try {
