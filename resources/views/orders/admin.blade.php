@@ -173,14 +173,14 @@
                                             </button>
                                         </div>
                                     </form>
-                                    <div class="flex items-center space-x-2">
+                                    <div class="flex flex-col space-y-2">
                                         <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bsf']) }}" 
-                                           class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                           class="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                             Orden de Compra (BsF)
                                         </a>
                                         @if($order->exchange_rate)
                                         <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'usd']) }}" 
-                                           class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                           class="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                             Orden de Compra (USD)
                                         </a>
                                         @endif
