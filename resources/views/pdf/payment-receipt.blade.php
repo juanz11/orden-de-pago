@@ -35,11 +35,6 @@
         th {
             background-color: #f8f9fa;
         }
-        .total {
-            text-align: right;
-            margin-top: 20px;
-            font-weight: bold;
-        }
         .payment-info {
             margin-top: 30px;
             padding: 15px;
@@ -79,9 +74,24 @@
     <div class="payment-info">
         <h3>Información del Pago</h3>
         <div class="info-row">
+            <span class="label">Tipo de Pago:</span>
+            {{ ucfirst($payment->payment_type) }}
+        </div>
+        @if($payment->payment_type === 'banco')
+        <div class="info-row">
+            <span class="label">Banco:</span>
+            {{ ucfirst($payment->bank_name) }}
+        </div>
+        <div class="info-row">
             <span class="label">Número de Referencia:</span>
             {{ $payment->reference_number }}
         </div>
+        @else
+        <div class="info-row">
+            <span class="label">Monto en Efectivo:</span>
+            <x-format-currency :amount="$payment->cash_amount" />
+        </div>
+        @endif
         <div class="info-row">
             <span class="label">Porcentaje Pagado:</span>
             {{ number_format($payment->percentage, 1) }}%
@@ -89,6 +99,10 @@
         <div class="info-row">
             <span class="label">Monto Pagado:</span>
             <x-format-currency :amount="$payment->amount" />
+        </div>
+        <div class="info-row">
+            <span class="label">Asiento Contable:</span>
+            {{ $payment->accounting_entry }}
         </div>
         <div class="info-row">
             <span class="label">Registrado por:</span>
@@ -104,7 +118,7 @@
                     <th>Descripción</th>
                     <th>Cantidad</th>
                     <th>Precio Unitario</th>
-                    <th>Total</th>
+                    <th>Monto Pagado ({{ number_format($payment->percentage, 1) }}%)</th>
                 </tr>
             </thead>
             <tbody>
@@ -113,18 +127,11 @@
                     <td>{{ $item->description }}</td>
                     <td>{{ $item->quantity }}</td>
                     <td><x-format-currency :amount="$item->unit_price" /></td>
-                    <td><x-format-currency :amount="$item->quantity * $item->unit_price" /></td>
+                    <td><x-format-currency :amount="($item->quantity * $item->unit_price) * ($payment->percentage / 100)" /></td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
-    </div>
-
-    <div class="total">
-        <div class="info-row">
-            <span class="label">Total de la Orden:</span>
-            <x-format-currency :amount="$order->total" />
-        </div>
     </div>
 </body>
 </html>

@@ -31,7 +31,7 @@ Route::middleware(['auth'])->group(function () {
         Route::middleware(['can:admin'])->group(function () {
             Route::get('/orders/payments', [OrderController::class, 'paymentIndex'])->name('orders.payments.index');
             Route::get('/orders/payments/create', [OrderController::class, 'paymentCreate'])->name('orders.payments.create');
-            Route::post('/orders/payments', [OrderController::class, 'paymentStore'])->name('orders.payments.store');
+            Route::post('/orders/payments', [OrderController::class, 'storePayment'])->name('orders.payments.store');
             Route::get('/orders/{order}/payments/{payment}/receipt', [OrderController::class, 'downloadPaymentReceipt'])
                 ->name('orders.payments.receipt');
         });

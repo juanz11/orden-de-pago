@@ -3,10 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\OrderPayment;
 use App\Models\User;
 use App\Models\OrderItem;
 use App\Models\OrderApproval;
-use App\Models\OrderPayment;
 use App\Models\Supplier;
 use App\Mail\NewOrderNotification;
 use App\Mail\OrderStatusNotification;
@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -365,17 +366,17 @@ class OrderController extends Controller
 
     public function storePayment(Request $request)
     {
-        $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'percentage' => 'required|numeric|min:0.01|max:100',
-            'payment_type' => 'required|in:efectivo,banco',
-            'cash_amount' => 'required_if:payment_type,efectivo|numeric|min:0.01|nullable',
-            'bank_name' => 'required_if:payment_type,banco|string|nullable',
-            'reference_number' => 'required_if:payment_type,banco|string|nullable',
-            'accounting_entry' => 'required|string'
-        ]);
-
         try {
+            $validated = $request->validate([
+                'order_id' => 'required|exists:orders,id',
+                'percentage' => 'required|numeric|min:0.01|max:100',
+                'payment_type' => 'required|in:efectivo,banco',
+                'cash_amount' => 'required_if:payment_type,efectivo|numeric|min:0.01|nullable',
+                'bank_name' => 'required_if:payment_type,banco|string|nullable',
+                'reference_number' => 'required_if:payment_type,banco|string|nullable',
+                'accounting_entry' => 'required|string'
+            ]);
+
             DB::beginTransaction();
 
             $order = Order::findOrFail($request->order_id);
@@ -388,8 +389,13 @@ class OrderController extends Controller
                 ]);
             }
 
+            $amount = $order->total * ($request->percentage / 100);
+
             $payment = new OrderPayment([
+                'order_id' => $order->id,
+                'user_id' => auth()->id(),
                 'percentage' => $request->percentage,
+                'amount' => $amount,
                 'payment_type' => $request->payment_type,
                 'bank_name' => $request->payment_type === 'banco' ? $request->bank_name : null,
                 'reference_number' => $request->payment_type === 'banco' ? $request->reference_number : null,
@@ -407,8 +413,8 @@ class OrderController extends Controller
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Error al registrar pago: ' . $e->getMessage());
-            return back()->with('error', 'Error al registrar el pago. Por favor, inténtalo de nuevo.');
+            \Log::error('Error al registrar pago: ' . $e->getMessage());
+            return back()->with('error', 'Error al registrar el pago. Por favor, inténtalo de nuevo.')->withInput();
         }
     }
 }
