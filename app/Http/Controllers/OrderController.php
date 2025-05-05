@@ -295,6 +295,16 @@ class OrderController extends Controller
         return $pdf->download('orden-pago-' . str_pad($order->id, 4, '0', STR_PAD_LEFT) . '-' . $currencyText . '.pdf');
     }
 
+    public function downloadPaymentReceipt(Order $order, OrderPayment $payment)
+    {
+        if ($payment->order_id !== $order->id) {
+            abort(404);
+        }
+
+        $pdf = Pdf::loadView('pdf.payment-receipt', compact('order', 'payment'));
+        return $pdf->download('comprobante-pago-' . str_pad($order->id, 4, '0', STR_PAD_LEFT) . '-' . $payment->id . '.pdf');
+    }
+
     public function paymentIndex()
     {
         $orders = Order::with(['supplier', 'payments'])
