@@ -362,4 +362,53 @@ class OrderController extends Controller
         return redirect()->route('orders.payments.index')
             ->with('success', 'Pago registrado exitosamente.');
     }
+
+    public function storePayment(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'percentage' => 'required|numeric|min:0.01|max:100',
+            'payment_type' => 'required|in:efectivo,banco',
+            'cash_amount' => 'required_if:payment_type,efectivo|numeric|min:0.01|nullable',
+            'bank_name' => 'required_if:payment_type,banco|string|nullable',
+            'reference_number' => 'required_if:payment_type,banco|string|nullable',
+            'accounting_entry' => 'required|string'
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $order = Order::findOrFail($request->order_id);
+            
+            // Verificar que el porcentaje no exceda el disponible
+            $remainingPercentage = $order->remaining_percentage;
+            if ($request->percentage > $remainingPercentage) {
+                throw ValidationException::withMessages([
+                    'percentage' => "El porcentaje no puede exceder el disponible ({$remainingPercentage}%)"
+                ]);
+            }
+
+            $payment = new OrderPayment([
+                'percentage' => $request->percentage,
+                'payment_type' => $request->payment_type,
+                'bank_name' => $request->payment_type === 'banco' ? $request->bank_name : null,
+                'reference_number' => $request->payment_type === 'banco' ? $request->reference_number : null,
+                'cash_amount' => $request->payment_type === 'efectivo' ? $request->cash_amount : null,
+                'accounting_entry' => $request->accounting_entry
+            ]);
+
+            $order->payments()->save($payment);
+
+            DB::commit();
+            return redirect()->route('orders.payments.index')->with('success', 'Pago registrado correctamente');
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error al registrar pago: ' . $e->getMessage());
+            return back()->with('error', 'Error al registrar el pago. Por favor, inténtalo de nuevo.');
+        }
+    }
 }

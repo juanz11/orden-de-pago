@@ -74,8 +74,14 @@
                                                 <div class="text-sm">
                                                     <span class="font-medium">{{ number_format($payment->percentage, 1) }}%</span>
                                                     <span class="text-gray-500">
-                                                        (<x-format-currency :amount="$payment->amount" />) -
-                                                        Ref: {{ $payment->reference_number }}
+                                                        (<x-format-currency :amount="$payment->amount" />)
+                                                        @if($payment->payment_type === 'banco')
+                                                            - {{ ucfirst($payment->bank_name) }}
+                                                            - Ref: {{ $payment->reference_number }}
+                                                        @else
+                                                            - Efectivo ${{ number_format($payment->cash_amount, 2) }}
+                                                        @endif
+                                                        - {{ $payment->accounting_entry }}
                                                         <a href="{{ route('orders.payments.receipt', ['order' => $order, 'payment' => $payment]) }}" 
                                                            class="inline-flex items-center ml-2 text-blue-600 hover:text-blue-800">
                                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

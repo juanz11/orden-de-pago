@@ -51,11 +51,70 @@
                     </div>
 
                     <div>
-                        <label for="reference_number" class="block text-sm font-medium text-gray-700">Número de Referencia</label>
-                        <input type="text" name="reference_number" id="reference_number" 
+                        <label for="payment_type" class="block text-sm font-medium text-gray-700">Tipo de Pago</label>
+                        <select name="payment_type" id="payment_type" 
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                required>
-                        @error('reference_number')
+                            <option value="">Seleccionar tipo de pago</option>
+                            <option value="efectivo">Efectivo</option>
+                            <option value="banco">Banco</option>
+                        </select>
+                        @error('payment_type')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div id="cash_amount_container" style="display: none;">
+                        <label for="cash_amount" class="block text-sm font-medium text-gray-700">Monto en Efectivo $</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" name="cash_amount" id="cash_amount" 
+                                   class="pl-7 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                   step="0.01" min="0.01"
+                                   placeholder="0.00">
+                        </div>
+                        @error('cash_amount')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div id="bank_container" style="display: none;" class="space-y-4">
+                        <div>
+                            <label for="bank_name" class="block text-sm font-medium text-gray-700">Banco</label>
+                            <select name="bank_name" id="bank_name" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Seleccionar banco</option>
+                                <option value="mercantil">Mercantil</option>
+                                <option value="banesco">Banesco</option>
+                                <option value="provincial">Provincial</option>
+                                <option value="caroni">Banco Caroní</option>
+                                <option value="bicentenario">Bicentenario</option>
+                                <option value="tesoro">Banco del Tesoro</option>
+                                <option value="banesco_panama">Banesco Panamá</option>
+                            </select>
+                            @error('bank_name')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div>
+                            <label for="reference_number" class="block text-sm font-medium text-gray-700">Número de Referencia</label>
+                            <input type="text" name="reference_number" id="reference_number" 
+                                   class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                            @error('reference_number')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="accounting_entry" class="block text-sm font-medium text-gray-700">Asiento Contable</label>
+                        <input type="text" name="accounting_entry" id="accounting_entry" 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                               required>
+                        @error('accounting_entry')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -83,6 +142,29 @@ document.addEventListener('DOMContentLoaded', function() {
     const orderSelect = document.getElementById('order_id');
     const percentageInput = document.getElementById('percentage');
     const amountPreview = document.getElementById('amount_preview');
+    const paymentTypeSelect = document.getElementById('payment_type');
+    const bankContainer = document.getElementById('bank_container');
+    const cashAmountContainer = document.getElementById('cash_amount_container');
+    const bankNameSelect = document.getElementById('bank_name');
+    const referenceInput = document.getElementById('reference_number');
+
+    function updatePaymentFields() {
+        const selectedType = paymentTypeSelect.value;
+        if (selectedType === 'efectivo') {
+            bankContainer.style.display = 'none';
+            cashAmountContainer.style.display = 'block';
+            bankNameSelect.removeAttribute('required');
+            referenceInput.removeAttribute('required');
+        } else if (selectedType === 'banco') {
+            bankContainer.style.display = 'block';
+            cashAmountContainer.style.display = 'none';
+            bankNameSelect.setAttribute('required', 'required');
+            referenceInput.setAttribute('required', 'required');
+        } else {
+            bankContainer.style.display = 'none';
+            cashAmountContainer.style.display = 'none';
+        }
+    }
 
     function updateAmountPreview() {
         const selectedOption = orderSelect.options[orderSelect.selectedIndex];
@@ -96,6 +178,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    paymentTypeSelect.addEventListener('change', updatePaymentFields);
+    
     orderSelect.addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
         if (selectedOption && selectedOption.value) {
@@ -107,6 +191,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     percentageInput.addEventListener('input', updateAmountPreview);
+    
+    // Initial state
+    updatePaymentFields();
 });
 </script>
 @endpush

@@ -14,12 +14,17 @@ class OrderPayment extends Model
         'user_id',
         'percentage',
         'amount',
-        'reference_number'
+        'payment_type',
+        'bank_name',
+        'reference_number',
+        'cash_amount',
+        'accounting_entry'
     ];
 
     protected $casts = [
         'percentage' => 'decimal:2',
-        'amount' => 'decimal:2'
+        'amount' => 'decimal:2',
+        'cash_amount' => 'decimal:2'
     ];
 
     public function order()
