@@ -59,15 +59,16 @@
                                         <input type="text" name="items[0][description]" required
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Precio Unitario (Bs.)</label>
-                                        <input type="number" step="0.01" name="items[0][unit_price]" required
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            onchange="calculateItemTotal(this)">
-                                    </div>
+                                   
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Cantidad</label>
                                         <input type="number" name="items[0][quantity]" required
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            onchange="calculateItemTotal(this)">
+                                    </div>
+                                     <div>
+                                        <label class="block text-sm font-medium text-gray-700">Precio Unitario (Bs.)</label>
+                                        <input type="number" step="0.01" name="items[0][unit_price]" required
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                                             onchange="calculateItemTotal(this)">
                                     </div>
