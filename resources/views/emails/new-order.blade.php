@@ -1,86 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .header {
-            background-color: #f8f9fa;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-        }
-        .details {
-            margin-bottom: 20px;
-        }
-        .items {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-        .items th, .items td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .items th {
-            background-color: #f8f9fa;
-        }
-        .total {
-            font-weight: bold;
-            text-align: right;
-        }
-    </style>
+    <meta charset="utf-8">
+    <title>Nueva Orden de Pago</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h2>Nueva Orden de Pago Creada</h2>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px;">
+    <div style="max-width: 600px; margin: 0 auto; background: #fff;">
+        <h1 style="color: #333; text-align: center;">Nueva Orden de Pago #{{ $order->id }}</h1>
+        
+        <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 5px;">
+            <h2 style="color: #444; margin-bottom: 15px;">Detalles de la orden:</h2>
+            <p style="margin: 10px 0;"><strong>Solicitante:</strong> {{ $order->user->name }}</p>
+            <p style="margin: 10px 0;"><strong>Departamento:</strong> {{ $order->user->department }}</p>
+            <p style="margin: 10px 0;"><strong>Proveedor:</strong> {{ $order->supplier ? $order->supplier->name : $order->other_supplier }}</p>
+            <p style="margin: 10px 0;"><strong>Fecha:</strong> {{ $order->created_at->format('d/m/Y') }}</p>
+            <p style="margin: 10px 0;"><strong>Estado:</strong> {{ $order->status }}</p>
         </div>
 
-        <div class="details">
-            <p><strong>Número de Orden:</strong> {{ $order->id }}</p>
-            <p><strong>Solicitante:</strong> {{ $order->user->name }}</p>
-            <p><strong>Departamento:</strong> {{ $order->user->department }}</p>
-            <p><strong>Proveedor:</strong> {{ $order->supplier->name }}</p>
-            <p><strong>Fecha:</strong> {{ $order->created_at->format('d/m/Y') }}</p>
+        <div style="margin: 20px 0;">
+            <h3 style="color: #444;">Items de la Orden</h3>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                <thead>
+                    <tr style="background: #f1f1f1;">
+                        <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Descripción</th>
+                        <th style="padding: 10px; text-align: center; border: 1px solid #ddd;">Cantidad</th>
+                        <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Precio Unitario</th>
+                        <th style="padding: 10px; text-align: right; border: 1px solid #ddd;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($order->items as $item)
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;">{{ $item->description }}</td>
+                        <td style="padding: 10px; text-align: center; border: 1px solid #ddd;">{{ $item->quantity }}</td>
+                        <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">{{ number_format($item->unit_price, 2, ',', '.') }} Bs.</td>
+                        <td style="padding: 10px; text-align: right; border: 1px solid #ddd;">{{ number_format($item->quantity * $item->unit_price, 2, ',', '.') }} Bs.</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="3" style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>Total:</strong></td>
+                        <td style="padding: 10px; text-align: right; border: 1px solid #ddd;"><strong>{{ number_format($order->total, 2, ',', '.') }} Bs.</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
         </div>
 
-        <h3>Items de la Orden</h3>
-        <table class="items">
-            <thead>
-                <tr>
-                    <th>Descripción</th>
-                    <th>Cantidad</th>
-                    <th>Precio Unitario</th>
-                    <th>Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($order->items as $item)
-                <tr>
-                    <td>{{ $item->description }}</td>
-                    <td>{{ $item->quantity }}</td>
-                    <td>Bs. {{ number_format($item->unit_price, 2) }}</td>
-                    <td>Bs. {{ number_format($item->quantity * $item->unit_price, 2) }}</td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
-
-        <div class="total">
-            <p>Total: Bs. {{ number_format($order->total, 2) }}</p>
+        @if($token && $order->status === 'pendiente')
+        <div style="text-align: center; margin: 30px 0;">
+            <p style="margin: 10px 0;">Esta orden requiere su aprobación. Por favor, haga clic en el botón a continuación para aprobarla:</p>
+            <a href="{{ route('orders.approve-by-email', ['token' => $token]) }}"
+               style="display: inline-block; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                Aprobar Orden
+            </a>
         </div>
+        @endif
 
-        <p>Para ver más detalles de la orden, ingrese al sistema.</p>
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 14px;">
+            <p>Gracias,<br>{{ config('app.name') }}</p>
+            @if($token && $order->status === 'pendiente')
+            <p style="font-size: 12px; color: #999;">Si el botón no funciona, puede copiar y pegar este enlace en su navegador:<br>
+            {{ route('orders.approve-by-email', ['token' => $token]) }}</p>
+            @endif
+        </div>
     </div>
 </body>
 </html>

@@ -65,7 +65,7 @@ class Order extends Model
 
     public function hasUserApproved($userId)
     {
-        return $this->approvals()->where('admin_id', $userId)->exists();
+        return $this->approvals()->where('user_id', $userId)->exists();
     }
 
     public function isFullyApproved()

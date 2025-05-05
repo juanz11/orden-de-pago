@@ -43,6 +43,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/orders/{order}/pdf', [OrderController::class, 'downloadPdf'])->name('orders.pdf');
         Route::get('/orders/{order}/payment-pdf', [OrderController::class, 'downloadPaymentOrder'])->name('orders.payment-pdf');
         Route::get('/api/orders/{order}/last-accounting-entry', [OrderController::class, 'getLastAccountingEntry']);
+        Route::get('/orders/approve/{token}', [OrderController::class, 'approveByEmail'])->name('orders.approve-by-email');
 
         // Rutas de proveedores para todos los usuarios (excepto delete)
         Route::resource('suppliers', SupplierController::class)->except(['destroy']);

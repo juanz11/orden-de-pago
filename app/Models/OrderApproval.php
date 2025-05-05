@@ -13,9 +13,10 @@ class OrderApproval extends Model
 
     protected $fillable = [
         'order_id',
-        'admin_id',
+        'user_id',
         'status',
-        'comments'
+        'token',
+        'approved_at'
     ];
 
     public function order()
@@ -23,8 +24,8 @@ class OrderApproval extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function admin()
+    public function user()
     {
-        return $this->belongsTo(User::class, 'admin_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }
