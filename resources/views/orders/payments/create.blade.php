@@ -147,6 +147,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const cashAmountContainer = document.getElementById('cash_amount_container');
     const bankNameSelect = document.getElementById('bank_name');
     const referenceInput = document.getElementById('reference_number');
+    const accountingEntryInput = document.getElementById('accounting_entry');
 
     function updatePaymentFields() {
         const selectedType = paymentTypeSelect.value;
@@ -178,6 +179,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function fetchLastAccountingEntry(orderId) {
+        try {
+            const response = await fetch(`/api/orders/${orderId}/last-accounting-entry`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.accounting_entry) {
+                    accountingEntryInput.value = data.accounting_entry;
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching last accounting entry:', error);
+        }
+    }
+
     paymentTypeSelect.addEventListener('change', updatePaymentFields);
     
     orderSelect.addEventListener('change', function() {
@@ -186,6 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const remainingPercentage = parseFloat(selectedOption.dataset.remaining);
             percentageInput.max = remainingPercentage;
             percentageInput.placeholder = `Máximo: ${remainingPercentage}%`;
+            fetchLastAccountingEntry(selectedOption.value);
         }
         updateAmountPreview();
     });

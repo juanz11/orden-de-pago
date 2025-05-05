@@ -42,6 +42,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/orders/{order}/update-observations', [OrderController::class, 'updateObservations'])->name('orders.update-observations');
         Route::get('/orders/{order}/pdf', [OrderController::class, 'downloadPdf'])->name('orders.pdf');
         Route::get('/orders/{order}/payment-pdf', [OrderController::class, 'downloadPaymentOrder'])->name('orders.payment-pdf');
+        Route::get('/api/orders/{order}/last-accounting-entry', [OrderController::class, 'getLastAccountingEntry']);
 
         // Rutas de proveedores para todos los usuarios (excepto delete)
         Route::resource('suppliers', SupplierController::class)->except(['destroy']);

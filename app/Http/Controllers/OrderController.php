@@ -417,4 +417,12 @@ class OrderController extends Controller
             return back()->with('error', 'Error al registrar el pago. Por favor, inténtalo de nuevo.')->withInput();
         }
     }
+
+    public function getLastAccountingEntry(Order $order)
+    {
+        $lastPayment = $order->payments()->latest()->first();
+        return response()->json([
+            'accounting_entry' => $lastPayment ? $lastPayment->accounting_entry : null
+        ]);
+    }
 }
