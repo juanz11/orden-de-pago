@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use App\Models\Supplier;
 use App\Models\User;
+use App\Models\OrderItem;
+use App\Models\OrderApproval;
+use App\Models\OrderPayment;
+use App\Models\Supplier;
 use App\Mail\NewOrderNotification;
 use App\Mail\OrderStatusNotification;
 use Illuminate\Http\Request;
@@ -290,5 +293,63 @@ class OrderController extends Controller
 
         $currencyText = $currency === 'usd' ? 'usd' : 'bs';
         return $pdf->download('orden-pago-' . str_pad($order->id, 4, '0', STR_PAD_LEFT) . '-' . $currencyText . '.pdf');
+    }
+
+    public function paymentIndex()
+    {
+        $orders = Order::with(['supplier', 'payments'])
+            ->orderBy('created_at', 'desc')
+            ->paginate(10);
+
+        return view('orders.payments.index', compact('orders'));
+    }
+
+    public function paymentCreate()
+    {
+        $orders = Order::with('supplier')
+            ->whereHas('approvals', function($query) {
+                $query->where('status', 'aprobado');
+            }, '=', 3)
+            ->get();
+
+        return view('orders.payments.create', compact('orders'));
+    }
+
+    public function paymentStore(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'percentage' => 'required|numeric|min:0.01|max:100',
+            'reference_number' => 'required|string|max:255'
+        ]);
+
+        $order = Order::findOrFail($request->order_id);
+
+        // Verificar que el porcentaje no exceda el disponible
+        $totalPaidPercentage = $order->total_paid_percentage;
+        $remainingPercentage = 100 - $totalPaidPercentage;
+
+        if ($request->percentage > $remainingPercentage) {
+            return back()->withErrors([
+                'percentage' => 'El porcentaje ingresado excede el porcentaje disponible para pago.'
+            ])->withInput();
+        }
+
+        // Calcular el monto basado en el porcentaje
+        $amount = $order->total * ($request->percentage / 100);
+
+        // Crear el registro de pago
+        $payment = new OrderPayment([
+            'order_id' => $order->id,
+            'user_id' => auth()->id(),
+            'percentage' => $request->percentage,
+            'amount' => $amount,
+            'reference_number' => $request->reference_number
+        ]);
+
+        $payment->save();
+
+        return redirect()->route('orders.payments.index')
+            ->with('success', 'Pago registrado exitosamente.');
     }
 }

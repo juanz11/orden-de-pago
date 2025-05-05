@@ -49,6 +49,9 @@
                                 <x-nav-link :href="route('orders.admin')" :active="request()->routeIs('orders.admin')">
                                     Gestión de Órdenes
                                 </x-nav-link>
+                                <x-nav-link :href="route('orders.payments.index')" :active="request()->routeIs('orders.payments.*')">
+                                    Gestión de Pagos
+                                </x-nav-link>
                                 <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                                     Reportes
                                 </x-nav-link>
@@ -95,30 +98,33 @@
         <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
             <div class="pt-2 pb-3 space-y-1">
                 @auth
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
+                    <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         Dashboard
-                    </x-nav-link>
-                    <x-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.index')">
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('orders.index')" :active="request()->routeIs('orders.index')">
                         Mis Órdenes
-                    </x-nav-link>
-                    <x-nav-link :href="route('orders.create')" :active="request()->routeIs('orders.create')">
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('orders.create')" :active="request()->routeIs('orders.create')">
                         Nueva Orden
-                    </x-nav-link>
-                    <x-nav-link :href="route('suppliers.index')" :active="request()->routeIs('suppliers.*')">
+                    </x-responsive-nav-link>
+                    <x-responsive-nav-link :href="route('suppliers.index')" :active="request()->routeIs('suppliers.*')">
                         Proveedores
-                    </x-nav-link>
+                    </x-responsive-nav-link>
                     @can('admin')
-                        <x-nav-link :href="route('orders.admin')" :active="request()->routeIs('orders.admin')">
+                        <x-responsive-nav-link :href="route('orders.admin')" :active="request()->routeIs('orders.admin')">
                             Gestión de Órdenes
-                        </x-nav-link>
-                        <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('orders.payments.index')" :active="request()->routeIs('orders.payments.*')">
+                            Gestión de Pagos
+                        </x-responsive-nav-link>
+                        <x-responsive-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
                             Reportes
-                        </x-nav-link>
+                        </x-responsive-nav-link>
                     @endcan
                     @can('superadmin')
-                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                        <x-responsive-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
                             Usuarios
-                        </x-nav-link>
+                        </x-responsive-nav-link>
                     @endcan
                 @endauth
             </div>

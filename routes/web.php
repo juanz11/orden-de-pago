@@ -27,6 +27,13 @@ Route::middleware(['auth'])->group(function () {
             return view('dashboard');
         })->name('dashboard');
 
+        // Rutas de gestión de pagos
+        Route::middleware(['can:admin'])->group(function () {
+            Route::get('/orders/payments', [OrderController::class, 'paymentIndex'])->name('orders.payments.index');
+            Route::get('/orders/payments/create', [OrderController::class, 'paymentCreate'])->name('orders.payments.create');
+            Route::post('/orders/payments', [OrderController::class, 'paymentStore'])->name('orders.payments.store');
+        });
+
         // Rutas de órdenes para todos los usuarios
         Route::resource('orders', OrderController::class);
         Route::post('/orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');

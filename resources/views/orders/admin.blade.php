@@ -40,6 +40,7 @@
                     <th class="py-3 px-6 text-left">Productos</th>
                     <th class="py-3 px-6 text-left">Total</th>
                     <th class="py-3 px-6 text-left">Estado</th>
+                    <th class="py-3 px-6 text-left">Pago</th>
                     <th class="py-3 px-6 text-left">Fecha</th>
                     <th class="py-3 px-6 text-left">Acciones</th>
                 </tr>
@@ -92,6 +93,21 @@
                             @endif
                             @if($order->admin_comments)
                                 <p class="text-xs text-gray-500 mt-1">{{ $order->admin_comments }}</p>
+                            @endif
+                        </div>
+                    </td>
+                    <td class="py-3 px-6">
+                        <div class="flex flex-col">
+                            <div class="flex items-center">
+                                <div class="w-24 bg-gray-200 rounded-full h-2.5 mr-2">
+                                    <div class="bg-blue-600 h-2.5 rounded-full" style="width: {{ $order->total_paid_percentage }}%"></div>
+                                </div>
+                                <span class="text-sm">{{ number_format($order->total_paid_percentage, 1) }}%</span>
+                            </div>
+                            @if($order->payments->count() > 0)
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Último pago: {{ $order->payments->sortByDesc('created_at')->first()->created_at->format('d/m/Y') }}
+                                </div>
                             @endif
                         </div>
                     </td>
