@@ -203,6 +203,7 @@
 
 @push('scripts')
 <script>
+    // Department filter functionality
     document.getElementById('department_filter').addEventListener('change', function() {
         const selectedDepartment = this.value;
         const rows = document.querySelectorAll('tbody tr');
@@ -213,6 +214,19 @@
                 row.style.display = '';
             } else {
                 row.style.display = 'none';
+            }
+        });
+    });
+
+    // Auto-fill exchange rate functionality
+    document.querySelectorAll('form[action*="update-status"]').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const exchangeRateInput = this.querySelector('input[name="exchange_rate"]');
+            if (exchangeRateInput && !exchangeRateInput.value) {
+                const currentRate = document.querySelector('.exchange-rate-value').dataset.rate;
+                if (currentRate) {
+                    exchangeRateInput.value = currentRate;
+                }
             }
         });
     });
