@@ -210,43 +210,56 @@ class OrderController extends Controller
             'exchange_rate' => 'required_if:approval_count,2|numeric|min:0'
         ]);
 
-        $existingApproval = $order->approvals()->where('user_id', auth()->id())->first();
-        
-        if ($existingApproval) {
-            return redirect()->back()->with('error', 'Ya has registrado tu aprobación para esta orden.');
+        DB::beginTransaction();
+        try {
+            $existingApproval = $order->approvals()->where('user_id', auth()->id())->first();
+            
+            if ($existingApproval) {
+                if ($existingApproval->status === $request->status) {
+                    return redirect()->back()->with('error', 'Ya has registrado tu aprobación para esta orden.');
+                }
+                // Actualizar la aprobación existente
+                $existingApproval->update([
+                    'status' => $request->status,
+                    'comments' => $request->admin_comments
+                ]);
+            } else {
+                // Crear nueva aprobación
+                $order->approvals()->create([
+                    'user_id' => auth()->id(),
+                    'status' => $request->status,
+                    'comments' => $request->admin_comments
+                ]);
+            }
+
+            // Actualizar el conteo después de crear/actualizar la aprobación
+            $approvalCount = $order->fresh()->approval_count;
+
+            // Solo actualizar el estado de la orden si hay 3 aprobaciones
+            if ($request->status === 'aprobado' && $approvalCount >= 3) {
+                $order->update([
+                    'status' => 'aprobado',
+                    'exchange_rate' => $request->exchange_rate
+                ]);
+
+                // Enviar notificación
+                Mail::to($order->user->email)->send(new OrderCreated($order));
+            } elseif ($request->status === 'rechazado') {
+                $order->update([
+                    'status' => 'rechazado'
+                ]);
+
+                // Enviar notificación
+                Mail::to($order->user->email)->send(new OrderCreated($order));
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Tu aprobación ha sido registrada. La orden requiere 3 aprobaciones para cambiar de estado.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error al actualizar estado de orden: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al procesar la aprobación. Por favor, intente nuevamente.');
         }
-
-        // Crear nueva aprobación
-        $order->approvals()->create([
-            'user_id' => auth()->id(),
-            'status' => $request->status,
-            'comments' => $request->admin_comments
-        ]);
-
-        // Actualizar el conteo después de crear la nueva aprobación
-        $approvalCount = $order->fresh()->approval_count;
-
-        // Solo actualizar el estado de la orden si hay 3 aprobaciones
-        if ($request->status === 'aprobado' && $approvalCount >= 3) {
-            $order->update([
-                'status' => 'aprobado',
-                'user_id' => auth()->id(),
-                'exchange_rate' => $request->exchange_rate
-            ]);
-
-            // Enviar notificación
-            Mail::to($order->user->email)->send(new OrderCreated($order));
-        } elseif ($request->status === 'rechazado') {
-            $order->update([
-                'status' => 'rechazado',
-                'user_id' => auth()->id()
-            ]);
-
-            // Enviar notificación
-            Mail::to($order->user->email)->send(new OrderCreated($order));
-        }
-
-        return redirect()->back()->with('success', 'Tu aprobación ha sido registrada. La orden requiere 3 aprobaciones para cambiar de estado.');
     }
 
     public function updateObservations(Request $request, Order $order)

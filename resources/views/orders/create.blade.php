@@ -41,6 +41,17 @@
                         @enderror
                     </div>
 
+                    <div>
+                        <label for="payment_condition" class="block text-sm font-medium text-gray-700">Condición de Pago</label>
+                        <input type="text" name="payment_condition" id="payment_condition" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                            placeholder="Ejemplo: 100% contra entrega"
+                            value="{{ old('payment_condition') }}">
+                        @error('payment_condition')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <div id="items_container">
                         <div class="mb-4">
                             <h3 class="text-lg font-medium">Productos</h3>
