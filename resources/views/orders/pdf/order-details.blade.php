@@ -121,10 +121,8 @@
                     <strong>Fecha de la orden:</strong> {{ $order->created_at->format('d/m/Y') }}<br>
                     <strong>Fecha de Entrega:</strong> {{ $order->created_at->format('d/m/Y') }}<br>
                     <strong>Contacto:</strong> {{ $order->supplier ? $order->supplier->contact_name : '' }}<br>
-                    <strong>Condición de Pago:</strong> {{ $order->supplier ? $order->supplier->payment_condition : '' }}<br>
-                    @if($order->exchange_rate)
-                    <strong>Tasa de cambio:</strong> {{ number_format($order->exchange_rate, 2, ',', '.') }} Bs/USD
-                    @endif
+                    <strong>Condición de Pago:</strong> {{ $order->payment_condition ?: 'N/A' }}<br>
+                    <strong>Tasa BCV:</strong> {{ $formatExchangeRate() }} Bs/USD
                 </td>
             </tr>
         </table>
@@ -136,8 +134,8 @@
                 <th style="width: 7%; padding: 2px; text-align: left; border-bottom: 1px solid #000; font-size: 0.8em;">Item</th>
                 <th style="width: 43%; padding: 2px; text-align: left; border-bottom: 1px solid #000; font-size: 0.8em;">Descripción</th>
                 <th style="width: 8%; padding: 2px; text-align: center; border-bottom: 1px solid #000; font-size: 0.8em;">Cant</th>
-                <th style="width: 21%; padding: 2px; text-align: right; border-bottom: 1px solid #000; font-size: 0.8em;">Precio Unit. (Bs)</th>
-                <th style="width: 21%; padding: 2px; text-align: right; border-bottom: 1px solid #000; font-size: 0.8em;">Monto (Bs)</th>
+                <th style="width: 21%; padding: 2px; text-align: right; border-bottom: 1px solid #000; font-size: 0.8em;">Precio Unit. {{ $currency === 'usd' ? '($)' : '(Bs)' }}</th>
+                <th style="width: 21%; padding: 2px; text-align: right; border-bottom: 1px solid #000; font-size: 0.8em;">Monto {{ $currency === 'usd' ? '($)' : '(Bs)' }}</th>
             </tr>
         </thead>
         <tbody>
@@ -146,8 +144,8 @@
                 <td style="padding: 1px 2px; text-align: left;">{{ $loop->iteration }}</td>
                 <td style="padding: 1px 2px; text-align: left;">{{ $item->description }}</td>
                 <td style="padding: 1px 2px; text-align: center;">{{ $item->quantity }}</td>
-                <td style="padding: 1px 2px; text-align: right;">Bs.F {{ number_format($item->unit_price, 2, ',', '.') }}</td>
-                <td style="padding: 1px 2px; text-align: right;">Bs.F {{ number_format($item->quantity * $item->unit_price, 2, ',', '.') }}</td>
+                <td style="padding: 1px 2px; text-align: right;">{{ $formatNumber($item->unit_price) }}</td>
+                <td style="padding: 1px 2px; text-align: right;">{{ $formatNumber($item->quantity * $item->unit_price) }}</td>
             </tr>
             @endforeach
         </tbody>
@@ -165,17 +163,17 @@
                 <td style="width: 40%; vertical-align: top;">
                     <table style="width: 100%;">
                         <tr>
-                            <td><strong>SUB-TOTAL (Bs):</strong></td>
-                            <td style="text-align: right;">Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
+                            <td><strong>SUB-TOTAL {{ $currency === 'usd' ? '($)' : '(Bs)' }}:</strong></td>
+                            <td style="text-align: right;">{{ $formatNumber($order->total) }}</td>
                         </tr>
                         <tr>
-                            <td><strong>TOTAL (Bs)</strong></td>
-                            <td style="text-align: right;">Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
+                            <td><strong>TOTAL {{ $currency === 'usd' ? '($)' : '(Bs)' }}</strong></td>
+                            <td style="text-align: right;">{{ $formatNumber($order->total) }}</td>
                         </tr>
-                        @if($order->exchange_rate)
+                        @if($currency === 'usd')
                         <tr>
                             <td colspan="2" style="text-align: right; font-size: 0.8em; padding-top: 10px;">
-                                * Montos convertidos usando tasa: {{ number_format($order->exchange_rate, 2, ',', '.') }} Bs/USD
+                                * Montos convertidos usando tasa BCV: {{ $formatExchangeRate() }} Bs/USD
                             </td>
                         </tr>
                         @endif

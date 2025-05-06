@@ -284,17 +284,44 @@ class OrderController extends Controller
         }
     }
 
-    public function downloadPdf($id)
+    public function downloadPdf($id, Request $request)
     {
         $order = Order::with(['user', 'supplier', 'items', 'approvals'])
             ->findOrFail($id);
 
-        $pdf = Pdf::loadView('orders.pdf.order-details', compact('order'));
+        $currency = $request->query('currency', 'bs');
+        
+        // Obtener la tasa BCV actual
+        $exchangeRate = $order->exchange_rate ?: 88.72; // Si no hay tasa en la orden, usar la actual
+        
+        // Formatear números según la moneda seleccionada
+        $formatNumber = function($number) use ($currency, $exchangeRate) {
+            if ($currency === 'usd') {
+                // Convertir a dólares usando la tasa BCV
+                $amountUsd = $number / $exchangeRate;
+                return '$ ' . number_format($amountUsd, 2, ',', '.');
+            }
+            return 'Bs. ' . number_format($number, 2, ',', '.');
+        };
+
+        // Formatear la tasa de cambio
+        $formatExchangeRate = function() use ($exchangeRate) {
+            return number_format($exchangeRate, 2, ',', '.');
+        };
+
+        $pdf = Pdf::loadView('orders.pdf.order-details', [
+            'order' => $order,
+            'currency' => $currency,
+            'formatNumber' => $formatNumber,
+            'formatExchangeRate' => $formatExchangeRate,
+            'exchangeRate' => $exchangeRate
+        ]);
         
         // Configurar el tamaño de página a 214 × 277 mm
         $pdf->setPaper([0, 0, 606.77, 785.2]); // Convertido de mm a puntos (1mm = 2.83465 puntos)
         
-        return $pdf->download("orden-de-pago-{$order->id}.pdf");
+        $currencyText = $currency === 'usd' ? 'usd' : 'bs';
+        return $pdf->download("orden-de-pago-{$order->id}-{$currencyText}.pdf");
     }
 
     public function downloadPaymentOrder(Order $order, Request $request)

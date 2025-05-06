@@ -178,12 +178,10 @@
                                            class="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
                                             Orden de Compra (Bs)
                                         </a>
-                                        @if($order->exchange_rate)
                                         <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'usd']) }}" 
                                            class="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                            Orden de Compra (USD)
+                                            Orden de Compra ($)
                                         </a>
-                                        @endif
                                     </div>
                                 </div>
                             @endif

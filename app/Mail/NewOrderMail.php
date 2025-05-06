@@ -23,9 +23,26 @@ class NewOrderMail extends Mailable
 
     public function build()
     {
+        // Obtener la tasa BCV actual
+        $exchangeRate = $this->order->exchange_rate ?: 88.72;
+        
+        // Formatear números para Bs con punto como separador de miles
+        $formatNumber = function($number) use ($exchangeRate) {
+            return 'Bs. ' . number_format($number, 2, ',', '.');
+        };
+
+        // Formatear la tasa de cambio
+        $formatExchangeRate = function() use ($exchangeRate) {
+            return number_format($exchangeRate, 2, ',', '.');
+        };
+
         $pdf = PDF::loadView('orders.pdf.order-details', [
             'order' => $this->order,
-            'token' => $this->token
+            'token' => $this->token,
+            'currency' => 'bs',
+            'formatNumber' => $formatNumber,
+            'formatExchangeRate' => $formatExchangeRate,
+            'exchangeRate' => $exchangeRate
         ]);
         
         // Configurar el tamaño de página a 214 × 277 mm
