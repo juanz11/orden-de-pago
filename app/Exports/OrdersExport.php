@@ -29,7 +29,7 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping
             'Proveedor',
             'Items',
             'Total USD',
-            'Total BSF',
+            'Total BS',
             'Estado'
         ];
     }
@@ -50,7 +50,7 @@ class OrdersExport implements FromCollection, WithHeadings, WithMapping
             $order->supplier ? $order->supplier->name : $order->other_supplier,
             $items,
             '$' . number_format($total_usd, 2),
-            'BSF ' . number_format($order->total, 2),
+            'BS ' . number_format($order->total, 2),
             ucfirst($order->status)
         ];
     }

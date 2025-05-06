@@ -299,7 +299,7 @@ class OrderController extends Controller
 
     public function downloadPaymentOrder(Order $order, Request $request)
     {
-        $currency = $request->query('currency', 'bsf');
+        $currency = $request->query('currency', 'bs');
         
         // Formatear números para Bs con punto como separador de miles
         $formatNumber = function($number) use ($currency, $order) {
