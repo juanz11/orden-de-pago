@@ -191,14 +191,23 @@
         <p>2.- Se cancela la Orden de Compra a la TASA del Banco Central de Venezuela -</p>
     </div>
 
-    <div class="signatures" style="display: flex; justify-content: space-between; margin-top: 50px;">
-        <div style="width: 200px; text-align: center;">
-            <div style="border-top: 1px solid #000; padding-top: 5px;">Joel A. Lopez J.</div>
-        </div>
-        <div class="signature">
-            <p style="margin: 0;">Representante Legal</p>
-            <p style="margin: 5px 0;">Julio H. Brandt T.</p>
-        </div>
+    <div style="margin-top: 60px; font-size: 0.8em;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td style="width: 50%; padding: 20px; border: none;">
+                    <div style="border-top: 1px solid black; text-align: center;">
+                    <div style="margin-top: 5px;"></div>
+                        <div>Joel A. Lopez J.</div>
+                    </div>
+                </td>
+                <td style="width: 50%; padding: 20px; border: none;">
+                    <div style="border-top: 1px solid black; text-align: center;">
+                       
+                        <div>Julio H. Brandt T.</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
     </div>
 </body>
 </html>
