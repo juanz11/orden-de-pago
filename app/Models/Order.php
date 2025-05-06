@@ -60,17 +60,29 @@ class Order extends Model
 
     public function getApprovalProgressAttribute()
     {
-        return $this->approval_count . '/3';
+        $approved = $this->approvals()->where('status', 'aprobado')->count();
+        $hasApproved = auth()->check() && $this->hasUserApproved(auth()->id());
+        $suffix = $hasApproved ? ' (Ya has aprobado)' : '';
+        return "Aprobaciones: {$approved}/3" . $suffix;
     }
 
     public function hasUserApproved($userId)
     {
-        return $this->approvals()->where('user_id', $userId)->exists();
+        return $this->approvals()
+            ->where('user_id', $userId)
+            ->where('status', 'aprobado')
+            ->exists();
     }
 
     public function isFullyApproved()
     {
-        return $this->approval_count >= 3;
+        return $this->approvals()->where('status', 'aprobado')->count() >= 3;
+    }
+
+    public function getRemainingApprovalsAttribute()
+    {
+        $approved = $this->approvals()->where('status', 'aprobado')->count();
+        return max(3 - $approved, 0);
     }
 
     public function getTotalPaidPercentageAttribute()

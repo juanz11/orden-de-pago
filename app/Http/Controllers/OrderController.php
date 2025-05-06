@@ -457,33 +457,110 @@ class OrderController extends Controller
 
     public function approveByEmail($token)
     {
-        $approval = OrderApproval::where('token', $token)
-            ->where('status', 'pendiente')
-            ->with('order')
-            ->firstOrFail();
-
         try {
+            Log::info('Iniciando aprobación por email con token: ' . $token);
+            
             DB::beginTransaction();
+            
+            // Buscar la aprobación y cargar las relaciones
+            $approval = OrderApproval::where('token', $token)
+                ->with(['order', 'order.approvals'])
+                ->first();
+            
+            if (!$approval) {
+                Log::warning('Token no encontrado: ' . $token);
+                return view('orders.token-used', [
+                    'order' => null,
+                    'error' => 'Token de aprobación inválido.',
+                    'message' => null
+                ]);
+            }
 
-            // Actualizar la aprobación
-            $approval->update([
-                'status' => 'aprobado'
+            Log::info('Aprobación encontrada:', [
+                'approval_id' => $approval->id,
+                'order_id' => $approval->order_id,
+                'user_id' => $approval->user_id,
+                'status' => $approval->status
             ]);
 
             $order = $approval->order;
 
-            // Si es la última aprobación necesaria, actualizar el estado de la orden
-            if ($order->approval_count === 3) {
-                $order->update(['status' => 'aprobado']);
+            // Si la orden ya no está pendiente
+            if ($order->status !== 'pendiente') {
+                Log::info('Orden no está pendiente');
+                return view('orders.token-used', [
+                    'order' => $order,
+                    'message' => 'Esta orden ya no está pendiente de aprobación.',
+                    'error' => null
+                ]);
             }
 
-            DB::commit();
-            return redirect()->route('orders.index')
-                ->with('success', 'Orden aprobada correctamente por correo electrónico.');
+            // Si la aprobación ya fue usada
+            if ($approval->status === 'aprobado') {
+                Log::info('Aprobación ya fue usada');
+                return view('orders.token-used', [
+                    'order' => $order,
+                    'message' => 'Ya has aprobado esta orden anteriormente.',
+                    'error' => null
+                ]);
+            }
+
+            try {
+                Log::info('Actualizando aprobación...');
+
+                // Actualizar la aprobación
+                $approval->fill([
+                    'status' => 'aprobado',
+                    'approved_at' => now()
+                ]);
+                
+                if (!$approval->save()) {
+                    throw new \Exception('No se pudo guardar la aprobación');
+                }
+
+                Log::info('Aprobación actualizada correctamente');
+
+                // Contar aprobaciones actuales
+                $approvedCount = $order->approvals()
+                    ->where('status', 'aprobado')
+                    ->count();
+
+                Log::info('Conteo de aprobaciones: ' . $approvedCount);
+
+                // Si tenemos 3 o más aprobaciones, actualizar el estado de la orden
+                if ($approvedCount >= 3) {
+                    $order->fill(['status' => 'aprobado']);
+                    if (!$order->save()) {
+                        throw new \Exception('No se pudo actualizar el estado de la orden');
+                    }
+                    Log::info('Orden marcada como aprobada');
+                }
+
+                DB::commit();
+                Log::info('Transacción completada exitosamente');
+
+                return view('orders.approval-success', [
+                    'order' => $order->fresh(),
+                    'approvedCount' => $approvedCount,
+                    'error' => null,
+                    'message' => null
+                ]);
+
+            } catch (\Exception $e) {
+                Log::error('Error al actualizar la aprobación: ' . $e->getMessage());
+                throw $e;
+            }
+
         } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->route('orders.index')
-                ->with('error', 'Error al procesar la aprobación. Por favor, inténtalo de nuevo.');
+            DB::rollback();
+            Log::error('Error completo en approveByEmail: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return view('orders.token-used', [
+                'order' => isset($order) ? $order : null,
+                'error' => 'Error al procesar la aprobación. Por favor, inténtalo de nuevo.',
+                'message' => null
+            ]);
         }
     }
 

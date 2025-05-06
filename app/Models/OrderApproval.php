@@ -11,12 +11,23 @@ class OrderApproval extends Model
 {
     use HasFactory;
 
+    protected $table = 'order_approvals';
+
     protected $fillable = [
         'order_id',
         'user_id',
         'status',
         'token',
-        'approved_at'
+        'approved_at',
+        'comments'
+    ];
+
+    protected $casts = [
+        'approved_at' => 'datetime'
+    ];
+
+    protected $attributes = [
+        'status' => 'pendiente'
     ];
 
     public function order()
@@ -26,6 +37,6 @@ class OrderApproval extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class);
     }
 }
