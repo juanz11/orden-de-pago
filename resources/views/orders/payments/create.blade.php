@@ -19,13 +19,15 @@
                             required>
                             <option value="">Seleccionar orden</option>
                             @foreach($orders as $order)
-                                <option value="{{ $order->id }}" 
-                                        data-total="{{ $order->total }}"
-                                        data-remaining="{{ $order->remaining_percentage }}">
-                                    Orden #{{ str_pad($order->id, 4, '0', STR_PAD_LEFT) }} - 
-                                    {{ $order->supplier ? $order->supplier->name : $order->other_supplier }}
-                                    (Disponible: {{ number_format($order->remaining_percentage, 1) }}%)
-                                </option>
+                                @if($order->remaining_percentage > 0)
+                                    <option value="{{ $order->id }}" 
+                                            data-total="{{ $order->total }}"
+                                            data-remaining="{{ $order->remaining_percentage }}">
+                                        Orden #{{ str_pad($order->id, 4, '0', STR_PAD_LEFT) }} - 
+                                        {{ $order->supplier ? $order->supplier->name : $order->other_supplier }}
+                                        (Disponible: {{ number_format($order->remaining_percentage, 1) }}%)
+                                    </option>
+                                @endif
                             @endforeach
                         </select>
                         @error('order_id')
