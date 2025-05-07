@@ -580,24 +580,15 @@ class OrderController extends Controller
 
                 Log::info('Conteo de aprobaciones: ' . $approvedCount);
 
-                // Si tenemos 3 o más aprobaciones, actualizar el estado de la orden
                 // Obtener todos los administradores
                 $allAdmins = User::whereIn('role', ['admin', 'superadmin'])->get();
-                $currentAdmin = User::find($approval->user_id);
-
-                // Obtener administradores que aún no han aprobado
-                $pendingAdmins = $allAdmins->filter(function($admin) use ($order) {
-                    return !$order->approvals()->where('user_id', $admin->id)->where('status', 'aprobado')->exists();
-                });
 
                 // Enviar notificación a otros administradores sobre la aprobación
-                $otherAdmins = $allAdmins->filter(function($admin) use ($currentAdmin) {
-                    return $admin->id !== $currentAdmin->id;
-                });
-
-                foreach ($otherAdmins as $admin) {
-                    Mail::to($admin->email)
-                        ->send(new OrderConfirmed($order, $currentAdmin, $pendingAdmins->all()));
+                foreach ($allAdmins as $admin) {
+                    if ($admin->id !== $approval->user_id) {
+                        Mail::to($admin->email)
+                            ->send(new OrderConfirmed($order));
+                    }
                 }
 
                 // Si hay suficientes aprobaciones, actualizar el estado de la orden

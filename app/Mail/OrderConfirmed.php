@@ -13,14 +13,10 @@ class OrderConfirmed extends Mailable
     use Queueable, SerializesModels;
 
     public $order;
-    public $confirmedBy;
-    public $pendingAdmins;
 
-    public function __construct(Order $order, User $confirmedBy, array $pendingAdmins)
+    public function __construct(Order $order)
     {
         $this->order = $order;
-        $this->confirmedBy = $confirmedBy;
-        $this->pendingAdmins = $pendingAdmins;
     }
 
     public function build()
