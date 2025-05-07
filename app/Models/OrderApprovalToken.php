@@ -3,31 +3,20 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use App\Models\Order;
-use App\Models\User;
 
-class OrderApproval extends Model
+class OrderApprovalToken extends Model
 {
-    use HasFactory;
-
-    protected $table = 'order_approvals';
-
     protected $fillable = [
         'order_id',
         'user_id',
-        'status',
         'token',
-        'approved_at',
-        'comments'
+        'expires_at',
+        'used_at',
     ];
 
     protected $casts = [
-        'approved_at' => 'datetime'
-    ];
-
-    protected $attributes = [
-        'status' => 'pendiente'
+        'expires_at' => 'datetime',
+        'used_at' => 'datetime',
     ];
 
     public function order()
@@ -38,5 +27,10 @@ class OrderApproval extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function isValid()
+    {
+        return !$this->used_at && $this->expires_at->isFuture();
     }
 }

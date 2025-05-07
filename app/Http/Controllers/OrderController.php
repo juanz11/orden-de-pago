@@ -8,16 +8,19 @@ use App\Models\User;
 use App\Models\OrderItem;
 use App\Models\OrderApproval;
 use App\Models\Supplier;
-use App\Mail\NewOrderNotification;
-use App\Mail\OrderStatusNotification;
+use App\Mail\OrderCreated;
+use App\Mail\NewOrderMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Str;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\OrderApprovalToken;
 
 class OrderController extends Controller
 {
@@ -94,20 +97,36 @@ class OrderController extends Controller
             DB::commit();
 
             try {
-                // Enviar correo al solicitante
+                // Enviar correo al solicitante (sin botón de aprobación)
                 Log::info('Enviando correo al solicitante: ' . $order->user->email);
                 Mail::to($order->user->email)
-                    ->send(new NewOrderNotification($order));
+                    ->send(new NewOrderMail($order));
 
-                // Enviar correo a los administradores
+                // Enviar correos a los administradores con token de aprobación
                 $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
                 foreach ($admins as $admin) {
-                    Log::info('Enviando correo al administrador: ' . $admin->email);
-                    Mail::to($admin->email)
-                        ->send(new NewOrderNotification($order));
+                    if ($order->status === 'pendiente') {
+                        $token = \Illuminate\Support\Str::random(64);
+                        $approval = new OrderApproval([
+                            'order_id' => $order->id,
+                            'user_id' => $admin->id,
+                            'status' => 'pendiente',
+                            'token' => $token
+                        ]);
+                        $approval->save();
+                        
+                        Log::info('Enviando correo al administrador: ' . $admin->email);
+                        Mail::to($admin->email)
+                            ->send(new NewOrderMail($order, $token));
+                    } else {
+                        Log::info('Enviando correo al administrador: ' . $admin->email);
+                        Mail::to($admin->email)
+                            ->send(new NewOrderMail($order));
+                    }
                 }
             } catch (\Exception $e) {
                 Log::error('Error al enviar correos: ' . $e->getMessage());
+                Log::error($e->getTraceAsString());
             }
 
             return redirect()->route('orders.index')->with('success', 'Orden creada correctamente.');
@@ -191,43 +210,56 @@ class OrderController extends Controller
             'exchange_rate' => 'required_if:approval_count,2|numeric|min:0'
         ]);
 
-        $existingApproval = $order->approvals()->where('admin_id', auth()->id())->first();
-        
-        if ($existingApproval) {
-            return redirect()->back()->with('error', 'Ya has registrado tu aprobación para esta orden.');
+        DB::beginTransaction();
+        try {
+            $existingApproval = $order->approvals()->where('user_id', auth()->id())->first();
+            
+            if ($existingApproval) {
+                if ($existingApproval->status === $request->status) {
+                    return redirect()->back()->with('error', 'Ya has registrado tu aprobación para esta orden.');
+                }
+                // Actualizar la aprobación existente
+                $existingApproval->update([
+                    'status' => $request->status,
+                    'comments' => $request->admin_comments
+                ]);
+            } else {
+                // Crear nueva aprobación
+                $order->approvals()->create([
+                    'user_id' => auth()->id(),
+                    'status' => $request->status,
+                    'comments' => $request->admin_comments
+                ]);
+            }
+
+            // Actualizar el conteo después de crear/actualizar la aprobación
+            $approvalCount = $order->fresh()->approval_count;
+
+            // Solo actualizar el estado de la orden si hay 3 aprobaciones
+            if ($request->status === 'aprobado' && $approvalCount >= 3) {
+                $order->update([
+                    'status' => 'aprobado',
+                    'exchange_rate' => $request->exchange_rate
+                ]);
+
+                // Enviar notificación
+                Mail::to($order->user->email)->send(new OrderCreated($order));
+            } elseif ($request->status === 'rechazado') {
+                $order->update([
+                    'status' => 'rechazado'
+                ]);
+
+                // Enviar notificación
+                Mail::to($order->user->email)->send(new OrderCreated($order));
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Tu aprobación ha sido registrada. La orden requiere 3 aprobaciones para cambiar de estado.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error al actualizar estado de orden: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al procesar la aprobación. Por favor, intente nuevamente.');
         }
-
-        // Crear nueva aprobación
-        $order->approvals()->create([
-            'admin_id' => auth()->id(),
-            'status' => $request->status,
-            'comments' => $request->admin_comments
-        ]);
-
-        // Actualizar el conteo después de crear la nueva aprobación
-        $approvalCount = $order->fresh()->approval_count;
-
-        // Solo actualizar el estado de la orden si hay 3 aprobaciones
-        if ($request->status === 'aprobado' && $approvalCount >= 3) {
-            $order->update([
-                'status' => 'aprobado',
-                'admin_id' => auth()->id(),
-                'exchange_rate' => $request->exchange_rate
-            ]);
-
-            // Enviar notificación
-            Mail::to($order->user->email)->send(new OrderStatusNotification($order));
-        } elseif ($request->status === 'rechazado') {
-            $order->update([
-                'status' => 'rechazado',
-                'admin_id' => auth()->id()
-            ]);
-
-            // Enviar notificación
-            Mail::to($order->user->email)->send(new OrderStatusNotification($order));
-        }
-
-        return redirect()->back()->with('success', 'Tu aprobación ha sido registrada. La orden requiere 3 aprobaciones para cambiar de estado.');
     }
 
     public function updateObservations(Request $request, Order $order)
@@ -252,31 +284,49 @@ class OrderController extends Controller
         }
     }
 
-    public function downloadPdf(Order $order, Request $request)
+    public function downloadPdf($id, Request $request)
     {
-        if ($order->status !== 'aprobado') {
-            return back()->with('error', 'Solo se pueden descargar órdenes aprobadas.');
-        }
+        $order = Order::with(['user', 'supplier', 'items', 'approvals'])
+            ->findOrFail($id);
 
-        $order->load(['user', 'supplier', 'items']);
-
-        // Validar moneda
-        $currency = $request->query('currency', 'bsf');
-        if ($currency === 'usd' && !$order->exchange_rate) {
-            return back()->with('error', 'La orden necesita una tasa de cambio para ser descargada en USD.');
-        }
-
-        $pdf = PDF::loadView('orders.pdf', compact('order', 'currency'));
+        $currency = $request->query('currency', 'bs');
         
-        // Configurar tamaño de página personalizado (214 × 277 mm)
-        $pdf->setPaper([0, 0, 606.77, 785.2]); // Convertir mm a puntos (1 mm = 2.835 puntos)
+        // Obtener la tasa BCV actual
+        $exchangeRate = $order->exchange_rate ?: 88.72; // Si no hay tasa en la orden, usar la actual
         
-        return $pdf->download('orden-' . str_pad($order->id, 4, '0', STR_PAD_LEFT) . '.pdf');
+        // Formatear números según la moneda seleccionada
+        $formatNumber = function($number) use ($currency, $exchangeRate) {
+            if ($currency === 'usd') {
+                // Convertir a dólares usando la tasa BCV
+                $amountUsd = $number / $exchangeRate;
+                return '$ ' . number_format($amountUsd, 2, ',', '.');
+            }
+            return 'Bs. ' . number_format($number, 2, ',', '.');
+        };
+
+        // Formatear la tasa de cambio
+        $formatExchangeRate = function() use ($exchangeRate) {
+            return number_format($exchangeRate, 2, ',', '.');
+        };
+
+        $pdf = Pdf::loadView('orders.pdf.order-details', [
+            'order' => $order,
+            'currency' => $currency,
+            'formatNumber' => $formatNumber,
+            'formatExchangeRate' => $formatExchangeRate,
+            'exchangeRate' => $exchangeRate
+        ]);
+        
+        // Configurar el tamaño de página a 214 × 277 mm
+        $pdf->setPaper([0, 0, 606.77, 785.2]); // Convertido de mm a puntos (1mm = 2.83465 puntos)
+        
+        $currencyText = $currency === 'usd' ? 'usd' : 'bs';
+        return $pdf->download("orden-de-pago-{$order->id}-{$currencyText}.pdf");
     }
 
     public function downloadPaymentOrder(Order $order, Request $request)
     {
-        $currency = $request->query('currency', 'bsf');
+        $currency = $request->query('currency', 'bs');
         
         // Formatear números para Bs con punto como separador de miles
         $formatNumber = function($number) use ($currency, $order) {
@@ -286,7 +336,7 @@ class OrderController extends Controller
             return 'Bs. ' . number_format($number, 2, ',', '.');
         };
 
-        $pdf = PDF::loadView('pdf.payment-order', [
+        $pdf = Pdf::loadView('pdf.payment-order', [
             'order' => $order,
             'currency' => $currency,
             'formatNumber' => $formatNumber
@@ -424,5 +474,163 @@ class OrderController extends Controller
         return response()->json([
             'accounting_entry' => $lastPayment ? $lastPayment->accounting_entry : null
         ]);
+    }
+
+    protected function createApprovalToken($order, $user)
+    {
+        return OrderApprovalToken::create([
+            'order_id' => $order->id,
+            'user_id' => $user->id,
+            'token' => \Illuminate\Support\Str::random(64),
+            'expires_at' => now()->addDay(),
+        ]);
+    }
+
+    public function approveByEmail($token)
+    {
+        try {
+            Log::info('Iniciando aprobación por email con token: ' . $token);
+            
+            DB::beginTransaction();
+            
+            // Buscar la aprobación y cargar las relaciones
+            $approval = OrderApproval::where('token', $token)
+                ->with(['order', 'order.approvals'])
+                ->first();
+            
+            if (!$approval) {
+                Log::warning('Token no encontrado: ' . $token);
+                return view('orders.token-used', [
+                    'order' => null,
+                    'error' => 'Token de aprobación inválido.',
+                    'message' => null
+                ]);
+            }
+
+            Log::info('Aprobación encontrada:', [
+                'approval_id' => $approval->id,
+                'order_id' => $approval->order_id,
+                'user_id' => $approval->user_id,
+                'status' => $approval->status
+            ]);
+
+            $order = $approval->order;
+
+            // Si la orden ya no está pendiente
+            if ($order->status !== 'pendiente') {
+                Log::info('Orden no está pendiente');
+                return view('orders.token-used', [
+                    'order' => $order,
+                    'message' => 'Esta orden ya no está pendiente de aprobación.',
+                    'error' => null
+                ]);
+            }
+
+            // Si la aprobación ya fue usada
+            if ($approval->status === 'aprobado') {
+                Log::info('Aprobación ya fue usada');
+                return view('orders.token-used', [
+                    'order' => $order,
+                    'message' => 'Ya has aprobado esta orden anteriormente.',
+                    'error' => null
+                ]);
+            }
+
+            try {
+                Log::info('Actualizando aprobación...');
+
+                // Actualizar la aprobación
+                $approval->fill([
+                    'status' => 'aprobado',
+                    'approved_at' => now()
+                ]);
+                
+                if (!$approval->save()) {
+                    throw new \Exception('No se pudo guardar la aprobación');
+                }
+
+                Log::info('Aprobación actualizada correctamente');
+
+                // Contar aprobaciones actuales
+                $approvedCount = $order->approvals()
+                    ->where('status', 'aprobado')
+                    ->count();
+
+                Log::info('Conteo de aprobaciones: ' . $approvedCount);
+
+                // Si tenemos 3 o más aprobaciones, actualizar el estado de la orden
+                if ($approvedCount >= 3) {
+                    $order->fill(['status' => 'aprobado']);
+                    if (!$order->save()) {
+                        throw new \Exception('No se pudo actualizar el estado de la orden');
+                    }
+                    Log::info('Orden marcada como aprobada');
+                }
+
+                DB::commit();
+                Log::info('Transacción completada exitosamente');
+
+                return view('orders.approval-success', [
+                    'order' => $order->fresh(),
+                    'approvedCount' => $approvedCount,
+                    'error' => null,
+                    'message' => null
+                ]);
+
+            } catch (\Exception $e) {
+                Log::error('Error al actualizar la aprobación: ' . $e->getMessage());
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error completo en approveByEmail: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return view('orders.token-used', [
+                'order' => isset($order) ? $order : null,
+                'error' => 'Error al procesar la aprobación. Por favor, inténtalo de nuevo.',
+                'message' => null
+            ]);
+        }
+    }
+
+    public function approve(Order $order)
+    {
+        try {
+            DB::beginTransaction();
+
+            $existingApproval = $order->approvals()->where('user_id', auth()->id())->first();
+
+            if ($existingApproval) {
+                if ($existingApproval->status === 'aprobado') {
+                    return back()->with('info', 'Ya has aprobado esta orden anteriormente.');
+                }
+
+                $existingApproval->update([
+                    'status' => 'aprobado',
+                    'user_id' => auth()->id(),
+                    'approved_at' => now()
+                ]);
+            } else {
+                $order->approvals()->create([
+                    'status' => 'aprobado',
+                    'user_id' => auth()->id(),
+                    'approved_at' => now()
+                ]);
+            }
+
+            // Verificar si la orden está completamente aprobada
+            if ($order->isFullyApproved()) {
+                $order->update(['status' => 'aprobado']);
+            }
+
+            DB::commit();
+            return back()->with('success', 'Orden aprobada exitosamente.');
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error approving order: ' . $e->getMessage());
+            return back()->with('error', 'Error al aprobar la orden.');
+        }
     }
 }

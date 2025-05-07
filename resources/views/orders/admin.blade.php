@@ -129,7 +129,7 @@
                                         <div class="flex flex-col space-y-2">
                                             @if($order->approval_count === 2)
                                                 <input type="number" name="exchange_rate" step="0.01" min="0" 
-                                                       placeholder="Tasa BsF/USD"
+                                                       placeholder="Tasa Bs/USD"
                                                        class="text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                             @endif
                                             <input type="text" name="admin_comments" 
@@ -174,16 +174,14 @@
                                         </div>
                                     </form>
                                     <div class="flex flex-col space-y-2">
-                                        <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bsf']) }}" 
+                                        <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bs']) }}" 
                                            class="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                            Orden de Compra (BsF)
+                                            Orden de Compra (Bs)
                                         </a>
-                                        @if($order->exchange_rate)
                                         <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'usd']) }}" 
                                            class="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                            Orden de Compra (USD)
+                                            Orden de Compra ($)
                                         </a>
-                                        @endif
                                     </div>
                                 </div>
                             @endif

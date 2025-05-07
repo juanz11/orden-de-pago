@@ -21,6 +21,9 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 Route::get('/register', [RegisterController::class, 'showRegistrationForm'])->name('register');
 Route::post('/register', [RegisterController::class, 'register']);
 
+// Rutas públicas para aprobación por correo
+Route::get('/orders/approve/{token}', [OrderController::class, 'approveByEmail'])->name('orders.approve-by-email');
+
 Route::middleware(['auth'])->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/dashboard', function () {
