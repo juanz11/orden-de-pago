@@ -10,6 +10,7 @@ use App\Models\OrderApproval;
 use App\Models\Supplier;
 use App\Mail\OrderCreated;
 use App\Mail\NewOrderMail;
+use App\Mail\OrderConfirmed;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -235,15 +236,36 @@ class OrderController extends Controller
             // Actualizar el conteo después de crear/actualizar la aprobación
             $approvalCount = $order->fresh()->approval_count;
 
-            // Solo actualizar el estado de la orden si hay 3 aprobaciones
-            if ($request->status === 'aprobado' && $approvalCount >= 3) {
-                $order->update([
-                    'status' => 'aprobado',
-                    'exchange_rate' => $request->exchange_rate
-                ]);
+            // Obtener todos los administradores
+            $allAdmins = User::whereIn('role', ['admin', 'superadmin'])->get();
+            $currentAdmin = auth()->user();
 
-                // Enviar notificación
-                Mail::to($order->user->email)->send(new OrderCreated($order));
+            // Obtener administradores que aún no han aprobado
+            $pendingAdmins = $allAdmins->filter(function($admin) use ($order) {
+                return !$order->approvals()->where('user_id', $admin->id)->where('status', 'aprobado')->exists();
+            });
+
+            // Enviar notificación a otros administradores sobre la aprobación
+            $otherAdmins = $allAdmins->filter(function($admin) use ($currentAdmin) {
+                return $admin->id !== $currentAdmin->id;
+            });
+
+            if ($request->status === 'aprobado') {
+                foreach ($otherAdmins as $admin) {
+                    Mail::to($admin->email)
+                        ->send(new OrderConfirmed($order, $currentAdmin, $pendingAdmins->all()));
+                }
+
+                // Si hay suficientes aprobaciones, actualizar el estado de la orden
+                if ($approvalCount >= 3) {
+                    $order->update([
+                        'status' => 'aprobado',
+                        'exchange_rate' => $request->exchange_rate
+                    ]);
+
+                    // Enviar notificación al usuario creador
+                    Mail::to($order->user->email)->send(new OrderCreated($order));
+                }
             } elseif ($request->status === 'rechazado') {
                 $order->update([
                     'status' => 'rechazado'
@@ -559,12 +581,35 @@ class OrderController extends Controller
                 Log::info('Conteo de aprobaciones: ' . $approvedCount);
 
                 // Si tenemos 3 o más aprobaciones, actualizar el estado de la orden
+                // Obtener todos los administradores
+                $allAdmins = User::whereIn('role', ['admin', 'superadmin'])->get();
+                $currentAdmin = User::find($approval->user_id);
+
+                // Obtener administradores que aún no han aprobado
+                $pendingAdmins = $allAdmins->filter(function($admin) use ($order) {
+                    return !$order->approvals()->where('user_id', $admin->id)->where('status', 'aprobado')->exists();
+                });
+
+                // Enviar notificación a otros administradores sobre la aprobación
+                $otherAdmins = $allAdmins->filter(function($admin) use ($currentAdmin) {
+                    return $admin->id !== $currentAdmin->id;
+                });
+
+                foreach ($otherAdmins as $admin) {
+                    Mail::to($admin->email)
+                        ->send(new OrderConfirmed($order, $currentAdmin, $pendingAdmins->all()));
+                }
+
+                // Si hay suficientes aprobaciones, actualizar el estado de la orden
                 if ($approvedCount >= 3) {
                     $order->fill(['status' => 'aprobado']);
                     if (!$order->save()) {
                         throw new \Exception('No se pudo actualizar el estado de la orden');
                     }
                     Log::info('Orden marcada como aprobada');
+
+                    // Enviar notificación al usuario creador
+                    Mail::to($order->user->email)->send(new OrderCreated($order));
                 }
 
                 DB::commit();
