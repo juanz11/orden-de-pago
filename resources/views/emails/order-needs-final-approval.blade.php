@@ -54,10 +54,18 @@
 
         <div style="text-align: center; margin: 30px 0;">
             <p style="margin: 10px 0;">Esta orden requiere su aprobación final. Por favor, haga clic en el botón a continuación para aprobarla:</p>
-            <a href="{{ route('orders.approve-by-email', ['token' => $token]) }}"
-               style="display: inline-block; padding: 12px 24px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;">
-                Aprobar Orden
-            </a>
+            <!-- Botón compatible con Outlook -->
+            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:separate;line-height:100%;">
+              <tr>
+                <td align="center" bgcolor="#4CAF50" role="presentation" style="border:none;border-radius:3px;cursor:auto;mso-padding-alt:10px 25px;background:#4CAF50;" valign="middle">
+                  <a href="{{ route('orders.approve-by-email', ['token' => $token]) }}"
+                     style="display:inline-block;background:#4CAF50;color:#ffffff;font-family:Arial, sans-serif;font-size:16px;font-weight:bold;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:10px 25px;mso-padding-alt:0px;border-radius:3px;"
+                     target="_blank">
+                    Aprobar Orden
+                  </a>
+                </td>
+              </tr>
+            </table>
         </div>
 
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 14px;">
