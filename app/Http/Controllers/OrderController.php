@@ -2,26 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\OrderPayment;
-use App\Models\User;
-use App\Models\OrderItem;
-use App\Models\OrderApproval;
-use App\Models\Supplier;
-use App\Mail\OrderCreated;
-use App\Mail\NewOrderMail;
 use App\Mail\OrderConfirmed;
+use App\Mail\OrderCreated;
+use App\Mail\OrderNeedsFinalApproval;
+use App\Mail\NewOrderMail;
+use App\Models\Order;
+use App\Models\OrderApproval;
+use App\Models\OrderApprovalToken;
+use App\Models\OrderItem;
+use App\Models\OrderPayment;
+use App\Models\Supplier;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\OrderApprovalToken;
 
 class OrderController extends Controller
 {
@@ -103,18 +104,11 @@ class OrderController extends Controller
                 Mail::to($order->user->email)
                     ->send(new NewOrderMail($order));
 
-                // Enviar correos a los administradores con token de aprobación
-                $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
+                // Enviar correos solo a los administradores normales con token de aprobación
+                $admins = User::where('role', 'admin')->get();
                 foreach ($admins as $admin) {
                     if ($order->status === 'pendiente') {
-                        $token = \Illuminate\Support\Str::random(64);
-                        $approval = new OrderApproval([
-                            'order_id' => $order->id,
-                            'user_id' => $admin->id,
-                            'status' => 'pendiente',
-                            'token' => $token
-                        ]);
-                        $approval->save();
+                        $token = $this->createApprovalToken($order, $admin);
                         
                         Log::info('Enviando correo al administrador: ' . $admin->email);
                         Mail::to($admin->email)
@@ -496,12 +490,17 @@ class OrderController extends Controller
 
     protected function createApprovalToken($order, $user)
     {
-        return OrderApprovalToken::create([
+        $token = \Illuminate\Support\Str::random(64);
+        
+        // Crear la aprobación con el token
+        OrderApproval::create([
             'order_id' => $order->id,
             'user_id' => $user->id,
-            'token' => \Illuminate\Support\Str::random(64),
-            'expires_at' => now()->addDay(),
+            'token' => $token,
+            'status' => 'pendiente'
         ]);
+
+        return $token;
     }
 
     public function approveByEmail($token)
@@ -579,7 +578,18 @@ class OrderController extends Controller
                 // Obtener todos los administradores
                 $allAdmins = User::whereIn('role', ['admin', 'superadmin'])->get();
 
-                // Enviar notificación a otros administradores sobre la aprobación
+                // Si hay 2 aprobaciones, notificar a los superadmins
+                if ($approvedCount == 2) {
+                    $superadmins = User::where('role', 'superadmin')->get();
+
+                    foreach ($superadmins as $superadmin) {
+                        $token = $this->createApprovalToken($order, $superadmin);
+                        if ($token) {
+                            Mail::to($superadmin->email)
+                                ->send(new OrderNeedsFinalApproval($order, $token));
+                        }
+                    }
+                }
 
                 // Si hay suficientes aprobaciones, actualizar el estado de la orden
                 if ($approvedCount >= 3) {
