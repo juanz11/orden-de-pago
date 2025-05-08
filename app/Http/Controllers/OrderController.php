@@ -251,10 +251,6 @@ class OrderController extends Controller
             });
 
             if ($request->status === 'aprobado') {
-                foreach ($otherAdmins as $admin) {
-                    Mail::to($admin->email)
-                        ->send(new OrderConfirmed($order, $currentAdmin, $pendingAdmins->all()));
-                }
 
                 // Si hay suficientes aprobaciones, actualizar el estado de la orden
                 if ($approvalCount >= 3) {
@@ -584,12 +580,6 @@ class OrderController extends Controller
                 $allAdmins = User::whereIn('role', ['admin', 'superadmin'])->get();
 
                 // Enviar notificación a otros administradores sobre la aprobación
-                foreach ($allAdmins as $admin) {
-                    if ($admin->id !== $approval->user_id) {
-                        Mail::to($admin->email)
-                            ->send(new OrderConfirmed($order));
-                    }
-                }
 
                 // Si hay suficientes aprobaciones, actualizar el estado de la orden
                 if ($approvedCount >= 3) {
