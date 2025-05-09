@@ -22,7 +22,28 @@ class OrderNeedsFinalApproval extends Mailable
 
     public function build()
     {
-        return $this->subject("Orden de Pago #{$this->order->id} - Aprobación Final")
-                    ->markdown('emails.order-needs-final-approval');
+        try {
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('orders.pdf.order-details', [
+                'order' => $this->order,
+                'currency' => 'Bs.',
+                'formatNumber' => function($number) {
+                    return number_format($number, 2, ',', '.');
+                },
+                'formatExchangeRate' => function($number) {
+                    return number_format($number, 2, ',', '.');
+                },
+                'exchangeRate' => null
+            ]);
+
+            return $this->subject("Orden de Pago #{$this->order->id} - Aprobación Final")
+                        ->markdown('emails.order-needs-final-approval')
+                        ->attachData($pdf->output(), "orden-de-pago-{$this->order->id}.pdf", [
+                            'mime' => 'application/pdf'
+                        ]);
+        } catch (\Exception $e) {
+            \Log::error('Error al generar PDF en OrderNeedsFinalApproval: ' . $e->getMessage());
+            return $this->subject("Orden de Pago #{$this->order->id} - Aprobación Final")
+                        ->markdown('emails.order-needs-final-approval');
+        }
     }
 }
