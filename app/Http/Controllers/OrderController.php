@@ -65,6 +65,7 @@ class OrderController extends Controller
             $request->validate([
                 'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
                 'other_supplier' => 'nullable|string|required_without:supplier_id',
+                'payment_condition' => 'nullable|string',
                 'items' => 'required|array|min:1',
                 'items.*.description' => 'required|string',
                 'items.*.unit_price' => 'required|numeric|min:0',
@@ -76,6 +77,7 @@ class OrderController extends Controller
             $order = new Order([
                 'supplier_id' => $request->supplier_id !== 'otro' ? $request->supplier_id : null,
                 'other_supplier' => $request->supplier_id === 'otro' ? $request->other_supplier : null,
+                'payment_condition' => $request->payment_condition,
                 'status' => 'pendiente',
                 'total' => 0
             ]);

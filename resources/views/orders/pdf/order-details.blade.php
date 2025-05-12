@@ -111,7 +111,7 @@
                     <strong>Fecha de la orden:</strong> {{ $order->created_at->format('d/m/Y') }}<br>
                     <strong>Fecha de Entrega:</strong> {{ $order->created_at->format('d/m/Y') }}<br>
                     <strong>Contacto:</strong> {{ $order->supplier ? $order->supplier->contact_name : '' }}<br>
-                    <strong>Condición de Pago:</strong> {{ $order->supplier ? $order->supplier->payment_condition : '' }}<br>
+                    <strong>Condición de Pago:</strong> {{ $order->payment_condition }}<br>
                     @if($order->exchange_rate)
                     <strong>Tasa de cambio:</strong> {{ number_format($order->exchange_rate, 2, ',', '.') }} Bs/USD
                     @endif

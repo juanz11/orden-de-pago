@@ -69,6 +69,7 @@
             <p><strong>Solicitante:</strong> {{ $order->user->name }}</p>
             <p><strong>Departamento:</strong> {{ $order->user->department }}</p>
             <p><strong>Proveedor:</strong> {{ $order->supplier ? $order->supplier->name : $order->other_supplier }}</p>
+            <p><strong>Condición de Pago:</strong> {{ $order->payment_condition }}</p>
         </div>
         <p><strong>Es importante que se cumplan las indicaciones aquí señaladas:</strong></p>
         <p>1.- SNC PHARMA, C.A. RIF: J-29855562-9, Dirección Fiscal: Centro Profesional</p>
