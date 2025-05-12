@@ -81,8 +81,8 @@
             <tr>
                 <th>Descripción</th>
                 <th class="text-center" width="10%">Cantidad</th>
-                <th class="text-right" width="20%">Precio Unitario (BS)</th>
-                <th class="text-right" width="20%">Total (BS)</th>
+                <th class="text-center" width="20%">Precio Unitario (BS)</th>
+                <th class="text-center" width="20%">Total (BS)</th>
             </tr>
         </thead>
         <tbody>
@@ -102,17 +102,6 @@
         <p><strong>TOTAL:</strong> {{ $formatNumber($order->total) }} Bs</p>
     </div>
 
-    <div style="margin-top: 20px;">
-        <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-                <td style="width: 60%; vertical-align: top; padding-right: 20px;">
-                    @if($order->observations)
-                    <strong style="color: #ff0000;">OBSERVACIONES:</strong>
-                    <span style="margin-left: 5px; font-weight: bold; font-size: 0.9em;">{{ $order->observations }}</span>
-                    @endif
-                </td>
-            </tr>
-        </table>
-    </div>
+
 </body>
 </html>
