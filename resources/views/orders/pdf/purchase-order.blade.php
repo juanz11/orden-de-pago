@@ -208,7 +208,7 @@
                 </td>
                 <td style="width: 50%; padding: 20px; border: none;">
                     <div style="border-top: 1px solid black; text-align: center;">
-                        <div style="margin-top: 5px;">Representante Legal</div>
+                        
                         <div>Julio H. Brandt T.</div>
                     </div>
                 </td>

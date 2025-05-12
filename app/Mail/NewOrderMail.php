@@ -36,13 +36,11 @@ class NewOrderMail extends Mailable
             return number_format($exchangeRate, 2, ',', '.');
         };
 
-        $pdf = PDF::loadView('orders.pdf.order-details', [
+        $pdf = PDF::loadView('orders.pdf.payment-order', [
             'order' => $this->order,
             'token' => $this->token,
             'currency' => 'bs',
-            'formatNumber' => $formatNumber,
-            'formatExchangeRate' => $formatExchangeRate,
-            'exchangeRate' => $exchangeRate
+            'formatNumber' => $formatNumber
         ]);
         
         // Configurar el tamaño de página a 214 × 277 mm
