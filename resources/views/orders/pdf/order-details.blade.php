@@ -137,8 +137,11 @@
                 <td style="padding: 1px 2px; text-align: left;">{{ $item->description }}</td>
                 <td style="padding: 1px 2px; text-align: center;">{{ $item->quantity }}</td>
                 @if($currency === 'usd')
-                <td style="padding: 1px 2px; text-align: right;">$ {{ number_format($item->unit_price / $order->exchange_rate, 2, '.', ',') }}</td>
-                <td style="padding: 1px 2px; text-align: right;">$ {{ number_format(($item->quantity * $item->unit_price) / $order->exchange_rate, 2, '.', ',') }}</td>
+                @php
+                    $exchange_rate = $order->exchange_rate ?: 94.32; // Usar tasa por defecto si no hay tasa en la orden
+                @endphp
+                <td style="padding: 1px 2px; text-align: right;">$ {{ number_format($item->unit_price / $exchange_rate, 2, '.', ',') }}</td>
+                <td style="padding: 1px 2px; text-align: right;">$ {{ number_format(($item->quantity * $item->unit_price) / $exchange_rate, 2, '.', ',') }}</td>
                 @else
                 <td style="padding: 1px 2px; text-align: right;">Bs.F {{ number_format($item->unit_price, 2, ',', '.') }}</td>
                 <td style="padding: 1px 2px; text-align: right;">Bs.F {{ number_format($item->quantity * $item->unit_price, 2, ',', '.') }}</td>
@@ -161,8 +164,11 @@
                     <table style="width: 100%;">
                         <tr>
                             @if($currency === 'usd')
+                            @php
+                                $exchange_rate = $order->exchange_rate ?: 94.32; // Usar tasa por defecto si no hay tasa en la orden
+                            @endphp
                             <td><strong>SUB-TOTAL (USD):</strong></td>
-                            <td style="text-align: right;">$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
+                            <td style="text-align: right;">$ {{ number_format($order->total / $exchange_rate, 2, '.', ',') }}</td>
                             @else
                             <td><strong>SUB-TOTAL (Bs):</strong></td>
                             <td style="text-align: right;">Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
@@ -171,7 +177,7 @@
                         <tr>
                             @if($currency === 'usd')
                             <td><strong>TOTAL (USD)</strong></td>
-                            <td style="text-align: right;">$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
+                            <td style="text-align: right;">$ {{ number_format($order->total / $exchange_rate, 2, '.', ',') }}</td>
                             @else
                             <td><strong>TOTAL (Bs)</strong></td>
                             <td style="text-align: right;">Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
@@ -180,7 +186,7 @@
                         @if($currency === 'usd')
                         <tr>
                             <td colspan="2" style="text-align: right; font-size: 0.8em; padding-top: 10px;">
-                                * Montos convertidos usando tasa: {{ number_format($order->exchange_rate, 2, ',', '.') }} Bs/USD
+                                * Montos convertidos usando tasa: {{ number_format($exchange_rate, 2, ',', '.') }} Bs/USD
                             </td>
                         </tr>
                         @endif
