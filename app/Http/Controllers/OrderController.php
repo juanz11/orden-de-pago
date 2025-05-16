@@ -306,7 +306,7 @@ class OrderController extends Controller
         $currency = $request->query('currency', 'bs');
         
         // Obtener la tasa BCV actual
-        $exchangeRate = $order->exchange_rate ?: 88.72; // Si no hay tasa en la orden, usar la actual
+        $exchangeRate = $order->exchange_rate ?: 94.32; // Si no hay tasa en la orden, usar la actual
         
         // Formatear números según la moneda seleccionada
         $formatNumber = function($number) use ($currency, $exchangeRate) {

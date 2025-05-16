@@ -24,7 +24,7 @@ class NewOrderMail extends Mailable
     public function build()
     {
         // Obtener la tasa BCV actual
-        $exchangeRate = $this->order->exchange_rate ?: 88.72;
+        $exchangeRate = $this->order->exchange_rate ?: 94.32;
         
         // Formatear números para Bs con punto como separador de miles
         $formatNumber = function($number) use ($exchangeRate) {
