@@ -66,6 +66,7 @@ class OrderController extends Controller
                 'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
                 'other_supplier' => 'nullable|string|required_without:supplier_id',
                 'payment_condition' => 'nullable|string',
+                'payment_voucher' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
                 'items' => 'required|array|min:1',
                 'items.*.description' => 'required|string',
                 'items.*.unit_price' => 'required|numeric|min:0',
@@ -103,8 +104,17 @@ class OrderController extends Controller
             try {
                 // Enviar correo al solicitante (sin botón de aprobación)
                 Log::info('Enviando correo al solicitante: ' . $order->user->email);
-                Mail::to($order->user->email)
-                    ->send(new NewOrderMail($order));
+                $email = new NewOrderMail($order);
+                
+                // Adjuntar el comprobante si se ha subido
+                if ($request->hasFile('payment_voucher')) {
+                    $file = $request->file('payment_voucher');
+                    $email->attach($file->getRealPath(), [
+                        'as' => $file->getClientOriginalName()
+                    ]);
+                }
+                
+                Mail::to($order->user->email)->send($email);
 
                 // Enviar correos solo a los administradores normales con token de aprobación
                 $admins = User::where('role', 'admin')->get();
@@ -113,12 +123,24 @@ class OrderController extends Controller
                         $token = $this->createApprovalToken($order, $admin);
                         
                         Log::info('Enviando correo al administrador: ' . $admin->email);
-                        Mail::to($admin->email)
-                            ->send(new NewOrderMail($order, $token));
+                        $email = new NewOrderMail($order, $token);
+                        if ($request->hasFile('payment_voucher')) {
+                            $file = $request->file('payment_voucher');
+                            $email->attach($file->getRealPath(), [
+                                'as' => $file->getClientOriginalName()
+                            ]);
+                        }
+                        Mail::to($admin->email)->send($email);
                     } else {
                         Log::info('Enviando correo al administrador: ' . $admin->email);
-                        Mail::to($admin->email)
-                            ->send(new NewOrderMail($order));
+                        $email = new NewOrderMail($order);
+                        if ($request->hasFile('payment_voucher')) {
+                            $file = $request->file('payment_voucher');
+                            $email->attach($file->getRealPath(), [
+                                'as' => $file->getClientOriginalName()
+                            ]);
+                        }
+                        Mail::to($admin->email)->send($email);
                     }
                 }
             } catch (\Exception $e) {

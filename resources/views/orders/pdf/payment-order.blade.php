@@ -72,8 +72,9 @@
             <p><strong>Condición de Pago:</strong> {{ $order->payment_condition }}</p>
         </div>
         <p><strong>Es importante que se cumplan las indicaciones aquí señaladas:</strong></p>
-        <p>1.- SNC PHARMA, C.A. RIF: J-29855562-9, Dirección Fiscal: Centro Profesional</p>
-        <p>2.- Se cancela la Orden de Compra a la TASA del Banco Central de Venezuela</p>
+        <p>1.- Factura a nombre de: SNC PHARMA C.A. RIF:J29855562-9</p>
+        <p>2.- Dirección Fiscal: AV ANDRES ELOY BLANCO CC CENTRO PROFESIONAL PREBO NIVEL PISO 2 OF 214 URB PREBO VALENCIA CARABOBO ZONA POSTAL 2001</p>
+        <p>3.- Se paga esta Orden de Compra a la TASA del Banco Central de Venezuela</p>
     </div>
 
     <table>

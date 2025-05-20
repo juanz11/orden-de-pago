@@ -11,7 +11,7 @@
 
                 @include('components.exchange-rate')
 
-                <form method="POST" action="{{ route('orders.store') }}" class="space-y-6">
+                <form method="POST" action="{{ route('orders.store') }}" class="space-y-6" enctype="multipart/form-data">
                     @csrf
 
                     <div>
@@ -48,6 +48,21 @@
                             placeholder="Ejemplo: 100% contra entrega"
                             value="{{ old('payment_condition') }}">
                         @error('payment_condition')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <label for="payment_voucher" class="block text-sm font-medium text-gray-700">Soporte de presupuesto (PDF o Imagen)</label>
+                        <input type="file" name="payment_voucher" id="payment_voucher" accept=".pdf,.jpg,.jpeg,.png"
+                            class="mt-1 block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-md file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-blue-50 file:text-blue-700
+                                hover:file:bg-blue-100"
+                        >
+                        @error('payment_voucher')
                             <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>

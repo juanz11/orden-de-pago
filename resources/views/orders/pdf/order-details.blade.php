@@ -112,6 +112,7 @@
                     <strong>Fecha de Entrega:</strong> {{ $order->created_at->format('d/m/Y') }}<br>
                     <strong>Contacto:</strong> {{ $order->supplier ? $order->supplier->contact_name : '' }}<br>
                     <strong>Condición de Pago:</strong> {{ $order->payment_condition }}<br>
+    
                     @if($order->exchange_rate)
                     <strong>Tasa de cambio:</strong> {{ number_format($order->exchange_rate, 2, ',', '.') }} Bs/USD
                     @endif
@@ -199,8 +200,9 @@
     <div class="company-instructions">
         <div style="border: 1px solid #ddd; padding: 10px; margin-top: 5px;">
             <strong>Es importante que se cumplan las indicaciones aquí señaladas.</strong><br>
-            1.- Facturar a: SNC PHARMA, C.A. RIF: J-29855562-9, Dirección Fiscal: Centro Profesional<br>
-            2.- Se cancela la Orden de Compra a la TASA del Banco Central de Venezuela -
+            1.- Factura a nombre de: SNC PHARMA C.A. RIF:J29855562-9<br>
+            2.- Dirección Fiscal: AV ANDRES ELOY BLANCO CC CENTRO PROFESIONAL PREBO NIVEL PISO 2 OF 214 URB PREBO VALENCIA CARABOBO ZONA POSTAL 2001<br>
+            3.- Se paga esta Orden de Compra a la TASA del Banco Central de Venezuela
         </div>
     </div>
 
