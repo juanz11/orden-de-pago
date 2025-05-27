@@ -34,6 +34,7 @@
         <table class="min-w-full table-auto">
             <thead>
                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                    <th class="py-3 px-6 text-left">Número de orden</th>
                     <th class="py-3 px-6 text-left">Usuario</th>
                     <th class="py-3 px-6 text-left">Departamento</th>
                     <th class="py-3 px-6 text-left">Proveedor</th>
@@ -48,6 +49,9 @@
             <tbody class="text-gray-600 text-sm font-light">
                 @foreach($orders as $order)
                 <tr class="border-b border-gray-200 hover:bg-gray-100">
+                    <td class="py-3 px-6 text-left font-medium">
+                        #{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}
+                    </td>
                     <td class="py-3 px-6 text-left">
                         {{ $order->user->name }}
                     </td>
