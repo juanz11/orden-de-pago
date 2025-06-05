@@ -185,18 +185,43 @@ class OrderController extends Controller
 
     public function edit(Order $order)
     {
-        if (!Gate::allows('update', $order)) {
-            abort(403, 'No tienes permiso para editar esta orden.');
+        // Solo administradores pueden editar órdenes
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'No tienes permiso para editar órdenes');
         }
         
         $suppliers = Supplier::all();
         return view('orders.edit', compact('order', 'suppliers'));
     }
 
+    public function cancelOrder(Order $order)
+    {
+        // Verificar que el usuario sea el dueño de la orden
+        if (auth()->id() !== $order->user_id) {
+            abort(403, 'No tienes permiso para cancelar esta orden');
+        }
+
+        // Verificar que la orden esté pendiente
+        if ($order->status !== 'pendiente') {
+            return redirect()->route('orders.index')
+                ->with('error', 'Solo se pueden cancelar órdenes pendientes');
+        }
+
+        // Actualizar el estado a rechazado (usamos este estado ya que no hay uno específico para cancelado)
+        $order->update([
+            'status' => Order::STATUS_REJECTED,
+            'admin_comments' => 'Cancelado por el usuario'
+        ]);
+
+        return redirect()->route('orders.index')
+            ->with('success', 'Orden cancelada correctamente');
+    }
+
     public function update(Request $request, Order $order)
     {
-        if (!Gate::allows('update', $order)) {
-            abort(403, 'No tienes permiso para editar esta orden.');
+        // Solo administradores pueden actualizar órdenes
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'No tienes permiso para actualizar órdenes');
         }
 
         if ($order->status !== Order::STATUS_PENDING) {

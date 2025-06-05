@@ -84,11 +84,22 @@
                     @endif
                     <td class="py-3 px-6 text-left">
                         @if($order->status === 'pendiente')
-                            @if(auth()->user()->isAdmin() || auth()->id() === $order->user_id)
-                            <a href="{{ route('orders.edit', $order) }}" class="text-blue-600 hover:text-blue-900 mr-2">
-                                Editar
-                            </a>
-                            @endif
+                            <div class="flex flex-col space-y-2">
+                                @if(auth()->user()->isAdmin())
+                                <a href="{{ route('orders.edit', $order) }}" class="text-blue-600 hover:text-blue-900">
+                                    Editar
+                                </a>
+                                @endif
+
+                                @if(!auth()->user()->isAdmin() && auth()->id() === $order->user_id)
+                                <form action="{{ route('orders.cancel', $order) }}" method="POST" class="inline" onsubmit="return confirm('¿ Está seguro que desea cancelar esta orden?');">
+                                    @csrf
+                                    <button type="submit" class="text-red-600 hover:text-red-900">
+                                        Cancelar
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
                         @endif
 
 
