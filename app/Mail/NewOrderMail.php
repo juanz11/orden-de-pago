@@ -6,6 +6,7 @@ use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use App\Services\ExchangeRateService;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class NewOrderMail extends Mailable
@@ -24,7 +25,8 @@ class NewOrderMail extends Mailable
     public function build()
     {
         // Obtener la tasa BCV actual
-        $exchangeRate = $this->order->exchange_rate ?: 94.32;
+        $exchangeRateService = new ExchangeRateService();
+        $exchangeRate = $this->order->exchange_rate ?: $exchangeRateService->getCurrentRate();
         
         // Formatear números para Bs con punto como separador de miles
         $formatNumber = function($number) use ($exchangeRate) {

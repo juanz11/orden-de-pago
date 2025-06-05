@@ -139,7 +139,8 @@
                 <td style="padding: 1px 2px; text-align: center;">{{ $item->quantity }}</td>
                 @if($currency === 'usd')
                 @php
-                    $exchange_rate = $order->exchange_rate ?: 94.32; // Usar tasa por defecto si no hay tasa en la orden
+                    $exchangeRateService = app(App\Services\ExchangeRateService::class);
+                    $exchange_rate = $order->exchange_rate ?: $exchangeRateService->getCurrentRate();
                 @endphp
                 <td style="padding: 1px 2px; text-align: right;">$ {{ number_format($item->unit_price / $exchange_rate, 2, '.', ',') }}</td>
                 <td style="padding: 1px 2px; text-align: right;">$ {{ number_format(($item->quantity * $item->unit_price) / $exchange_rate, 2, '.', ',') }}</td>

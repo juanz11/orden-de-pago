@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Mail\OrderConfirmed;
+use App\Services\ExchangeRateService;
 use App\Mail\OrderCreated;
 use App\Mail\OrderNeedsFinalApproval;
 use App\Mail\NewOrderMail;
@@ -328,7 +329,8 @@ class OrderController extends Controller
         $currency = $request->query('currency', 'bs');
         
         // Obtener la tasa BCV actual
-        $exchangeRate = $order->exchange_rate ?: 94.32; // Si no hay tasa en la orden, usar la actual
+        $exchangeRateService = new ExchangeRateService();
+        $exchangeRate = $order->exchange_rate ?: $exchangeRateService->getCurrentRate(); // Si no hay tasa en la orden, usar la actual
         
         // Formatear números según la moneda seleccionada
         $formatNumber = function($number) use ($currency, $exchangeRate) {
