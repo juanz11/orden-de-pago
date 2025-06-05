@@ -63,6 +63,22 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         try {
+            // Validar que el token del formulario exista y no haya sido usado
+            if (!$request->has('form_token')) {
+                throw ValidationException::withMessages([
+                    'form_token' => ['Token de formulario inválido']
+                ]);
+            }
+
+            // Usar una llave única en caché para este token
+            $cacheKey = 'order_submission_' . $request->form_token;
+            
+            // Intentar establecer la llave en caché. Si ya existe, es un reenvío
+            if (!cache()->add($cacheKey, true, now()->addMinutes(30))) {
+                return redirect()->route('orders.index')
+                    ->with('warning', 'Esta orden ya fue procesada. Por favor, no reenvíe el formulario.');
+            }
+
             $request->validate([
                 'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
                 'other_supplier' => 'nullable|string|required_without:supplier_id',
@@ -101,6 +117,9 @@ class OrderController extends Controller
             $order->save();
 
             DB::commit();
+
+            // Mantener el token en caché para prevenir reenvíos
+            cache()->put($cacheKey, true, now()->addMinutes(30));
 
             try {
                 // Enviar correo al solicitante (sin botón de aprobación)
@@ -148,6 +167,10 @@ class OrderController extends Controller
                 Log::error('Error al enviar correos: ' . $e->getMessage());
                 Log::error($e->getTraceAsString());
             }
+
+            // Redirigir con mensaje de éxito
+            return redirect()->route('orders.index')
+                ->with('success', 'Orden creada correctamente.');
 
             return redirect()->route('orders.index')->with('success', 'Orden creada correctamente.');
 
