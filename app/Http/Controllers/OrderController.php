@@ -233,6 +233,7 @@ class OrderController extends Controller
         $request->validate([
             'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
             'other_supplier' => 'nullable|string|required_without:supplier_id',
+            'observations' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
             'items.*.unit_price' => 'required|numeric|min:0',
@@ -244,6 +245,7 @@ class OrderController extends Controller
             $order->update([
                 'supplier_id' => $request->supplier_id !== 'otro' ? $request->supplier_id : null,
                 'other_supplier' => $request->supplier_id === 'otro' ? $request->other_supplier : null,
+                'observations' => $request->observations,
             ]);
 
             // Eliminar items existentes
