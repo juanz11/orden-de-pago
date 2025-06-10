@@ -167,7 +167,7 @@
                         <tr>
                             @if($currency === 'usd')
                             @php
-                                $exchange_rate = $order->exchange_rate ?: 94.32; // Usar tasa por defecto si no hay tasa en la orden
+                                $exchange_rate = $order->exchange_rate ?: $exchangeRateService->getCurrentRate(); // Si no hay tasa en la orden, usar la actual
                             @endphp
                             <td><strong>SUB-TOTAL (USD):</strong></td>
                             <td style="text-align: right;">$ {{ number_format($order->total / $exchange_rate, 2, '.', ',') }}</td>
