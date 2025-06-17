@@ -358,18 +358,55 @@ class OrderController extends Controller
                 'observations' => 'required|string|max:1000'
             ]);
 
-            \Log::info('Actualizando observaciones para orden #' . $order->id, [
-                'observations' => $request->observations
-            ]);
-
             $order->update([
                 'observations' => $request->observations
             ]);
 
-            return redirect()->back()->with('success', 'Observaciones actualizadas correctamente');
+            return redirect()->back()->with('success', 'Observaciones actualizadas exitosamente.');
         } catch (\Exception $e) {
-            \Log::error('Error al actualizar observaciones: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al actualizar observaciones: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al actualizar las observaciones.');
+        }
+    }
+
+    public function resendEmails(Request $request, Order $order)
+    {
+        try {
+            // Enviar correo al solicitante
+            Log::info('Reenviando correo al solicitante: ' . $order->user->email);
+            $email = new OrderCreated($order);
+            Mail::to($order->user->email)->send($email);
+
+            // Enviar correos a todos los administradores
+            $admins = User::where('role', 'admin')->get();
+            foreach ($admins as $admin) {
+                Log::info('Reenviando correo al administrador: ' . $admin->email);
+                
+                // Solo enviar correo si el admin no ha aprobado la orden
+                if (!$order->hasUserApproved($admin->id)) {
+                    $email = new OrderCreated($order);
+                    Mail::to($admin->email)->send($email);
+                }
+            }
+
+            // Si hay 2 aprobaciones y la orden no está aprobada, enviar correo al superadmin
+            if ($order->approval_count === 2 && $order->status !== 'aprobado') {
+                $superadmin = User::where('role', 'superadmin')->first();
+                if ($superadmin) {
+                    // Verificar si ya existe un token para el superadmin
+                    $existingApproval = OrderApproval::where('order_id', $order->id)
+                        ->where('user_id', $superadmin->id)
+                        ->first();
+                    
+                    $token = $existingApproval ? $existingApproval->token : $this->createApprovalToken($order, $superadmin);
+                    Log::info('Reenviando correo al superadmin: ' . $superadmin->email);
+                    Mail::to($superadmin->email)->send(new OrderNeedsFinalApproval($order, $token));
+                }
+            }
+
+            return redirect()->back()->with('success', 'Correos reenviados exitosamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al reenviar correos: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al reenviar los correos.');
         }
     }
 

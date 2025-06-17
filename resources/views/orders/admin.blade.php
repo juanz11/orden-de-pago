@@ -162,33 +162,47 @@
                                 @endif
                             @endif
 
-                            @if($order->status === 'aprobado')
-                                <div class="space-y-2">
-                                    <form action="{{ route('orders.update-observations', $order) }}" method="POST" class="mb-2">
-                                        @csrf
-                                        <div class="flex items-center space-x-2">
-                                            <input type="text" name="observations" 
-                                                   placeholder="OBSERVACIONES:" 
-                                                   value="{{ $order->observations }}"
-                                                   class="text-xs w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                            <button type="submit"
-                                                    class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                                Guardar
-                                            </button>
+                            <form action="{{ route('orders.resend-emails', $order) }}" method="POST" style="
+    border-color: transparent;
+    background-color: gainsboro;
+"> 
+                                @csrf
+                                <button type="submit" 
+                                        class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded  bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                                    Reenviar Correos
+                                </button>
+                            </form>
+
+                            <div class="flex flex-col space-y-2">
+                                @if($order->status === 'aprobado')
+                                    <div class="space-y-2">
+                                        <form action="{{ route('orders.update-observations', $order) }}" method="POST" class="mb-2">
+                                            @csrf
+                                            <div class="flex items-center space-x-2">
+                                                <input type="text" name="observations" 
+                                                       placeholder="OBSERVACIONES:" 
+                                                       value="{{ $order->observations }}"
+                                                       class="text-xs w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                                <button type="submit"
+                                                        class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                                    Guardar
+                                                </button>
+                                            </div>
+                                        </form>
+                                        <div class="flex flex-col space-y-2">
+                                            <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bs']) }}" 
+                                               class="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                Orden de Compra (Bs)
+                                            </a>
+                                            <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'usd']) }}" 
+                                               class="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                                Orden de Compra ($)
+                                            </a>
                                         </div>
-                                    </form>
-                                    <div class="flex flex-col space-y-2">
-                                        <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'bs']) }}" 
-                                           class="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                            Orden de Compra (Bs)
-                                        </a>
-                                        <a href="{{ route('orders.pdf', ['order' => $order, 'currency' => 'usd']) }}" 
-                                           class="inline-flex items-center justify-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                            Orden de Compra ($)
-                                        </a>
                                     </div>
-                                </div>
-                            @endif
+                                @endif
+                            </div>
+                            </div>
                         </div>
                     </td>
                 </tr>

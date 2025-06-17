@@ -44,6 +44,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/orders/{order}/update-status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
         Route::post('/orders/{order}/cancel', [OrderController::class, 'cancelOrder'])->name('orders.cancel');
         Route::post('/orders/{order}/update-observations', [OrderController::class, 'updateObservations'])->name('orders.update-observations');
+        Route::post('/orders/{order}/resend-emails', [OrderController::class, 'resendEmails'])->name('orders.resend-emails');
         Route::get('/orders/{order}/pdf', [OrderController::class, 'downloadPdf'])->name('orders.pdf');
         Route::get('/orders/{order}/payment-pdf', [OrderController::class, 'downloadPaymentOrder'])->name('orders.payment-pdf');
         Route::get('/api/orders/{order}/last-accounting-entry', [OrderController::class, 'getLastAccountingEntry']);
