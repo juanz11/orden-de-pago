@@ -45,9 +45,9 @@ class OrderController extends Controller
         ])
         ->latest()
         ->paginate(10);
-        
+
         $departments = User::distinct('department')->pluck('department')->filter();
-        
+
         return view('orders.admin', [
             'orders' => $orders,
             'departments' => $departments
@@ -72,7 +72,7 @@ class OrderController extends Controller
 
             // Usar una llave única en caché para este token
             $cacheKey = 'order_submission_' . $request->form_token;
-            
+
             // Intentar establecer la llave en caché. Si ya existe, es un reenvío
             if (!cache()->add($cacheKey, true, now()->addMinutes(30))) {
                 return redirect()->route('orders.index')
@@ -127,7 +127,7 @@ class OrderController extends Controller
                 // Enviar correo al solicitante (sin botón de aprobación)
                 Log::info('Enviando correo al solicitante: ' . $order->user->email);
                 $email = new NewOrderMail($order);
-                
+
                 // Adjuntar el comprobante si se ha subido
                 if ($request->hasFile('payment_voucher')) {
                     $file = $request->file('payment_voucher');
@@ -135,35 +135,26 @@ class OrderController extends Controller
                         'as' => $file->getClientOriginalName()
                     ]);
                 }
-                
+
                 Mail::to($order->user->email)->send($email);
 
-                // Enviar correos solo a los administradores normales con token de aprobación
-                $admins = User::where('role', 'admin')->get();
+                // Enviar correos a todos los administradores excepto al creador
+                $admins = User::where('role', 'admin')
+                    ->where('id', '!=', auth()->id())
+                    ->get();
+
                 foreach ($admins as $admin) {
-                    if ($order->status === 'pendiente') {
-                        $token = $this->createApprovalToken($order, $admin);
-                        
-                        Log::info('Enviando correo al administrador: ' . $admin->email);
-                        $email = new NewOrderMail($order, $token);
-                        if ($request->hasFile('payment_voucher')) {
-                            $file = $request->file('payment_voucher');
-                            $email->attach($file->getRealPath(), [
-                                'as' => $file->getClientOriginalName()
-                            ]);
-                        }
-                        Mail::to($admin->email)->send($email);
-                    } else {
-                        Log::info('Enviando correo al administrador: ' . $admin->email);
-                        $email = new NewOrderMail($order);
-                        if ($request->hasFile('payment_voucher')) {
-                            $file = $request->file('payment_voucher');
-                            $email->attach($file->getRealPath(), [
-                                'as' => $file->getClientOriginalName()
-                            ]);
-                        }
-                        Mail::to($admin->email)->send($email);
+                    $token = $this->createApprovalToken($order, $admin);
+
+                    Log::info('Enviando correo al administrador: ' . $admin->email);
+                    $email = new NewOrderMail($order, $token);
+                    if ($request->hasFile('payment_voucher')) {
+                        $file = $request->file('payment_voucher');
+                        $email->attach($file->getRealPath(), [
+                            'as' => $file->getClientOriginalName()
+                        ]);
                     }
+                    Mail::to($admin->email)->send($email);
                 }
             } catch (\Exception $e) {
                 Log::error('Error al enviar correos: ' . $e->getMessage());
@@ -191,7 +182,7 @@ class OrderController extends Controller
         if (!auth()->user()->isAdmin()) {
             abort(403, 'No tienes permiso para editar órdenes');
         }
-        
+
         $suppliers = Supplier::all();
         return view('orders.edit', compact('order', 'suppliers'));
     }
@@ -285,7 +276,7 @@ class OrderController extends Controller
         DB::beginTransaction();
         try {
             $existingApproval = $order->approvals()->where('user_id', auth()->id())->first();
-            
+
             if ($existingApproval) {
                 if ($existingApproval->status === $request->status) {
                     return redirect()->back()->with('error', 'Ya has registrado tu aprobación para esta orden.');
@@ -322,6 +313,15 @@ class OrderController extends Controller
             });
 
             if ($request->status === 'aprobado') {
+
+                // Si hay 2 aprobaciones, enviar correo al superadmin
+                if ($approvalCount === 2) {
+                    $superadmin = User::where('role', 'superadmin')->first();
+                    if ($superadmin) {
+                        $token = $this->createApprovalToken($order, $superadmin);
+                        Mail::to($superadmin->email)->send(new OrderNeedsFinalApproval($order, $token));
+                    }
+                }
 
                 // Si hay suficientes aprobaciones, actualizar el estado de la orden
                 if ($approvalCount >= 3) {
@@ -379,11 +379,11 @@ class OrderController extends Controller
             ->findOrFail($id);
 
         $currency = $request->query('currency', 'bs');
-        
+
         // Obtener la tasa BCV actual
         $exchangeRateService = new ExchangeRateService();
         $exchangeRate = $order->exchange_rate ?: $exchangeRateService->getCurrentRate(); // Si no hay tasa en la orden, usar la actual
-        
+
         // Formatear números según la moneda seleccionada
         $formatNumber = function($number) use ($currency, $exchangeRate) {
             if ($currency === 'usd') {
@@ -406,10 +406,10 @@ class OrderController extends Controller
             'formatExchangeRate' => $formatExchangeRate,
             'exchangeRate' => $exchangeRate
         ]);
-        
+
         // Configurar el tamaño de página a 214 × 277 mm
         $pdf->setPaper([0, 0, 606.77, 785.2]); // Convertido de mm a puntos (1mm = 2.83465 puntos)
-        
+
         $currencyText = $currency === 'usd' ? 'usd' : 'bs';
         return $pdf->download("orden-de-pago-{$order->id}-{$currencyText}.pdf");
     }
@@ -417,7 +417,7 @@ class OrderController extends Controller
     public function downloadPaymentOrder(Order $order, Request $request)
     {
         $currency = $request->query('currency', 'bs');
-        
+
         // Formatear números para Bs con punto como separador de miles
         $formatNumber = function($number) use ($currency, $order) {
             if ($currency === 'usd' && $order->exchange_rate) {
@@ -520,7 +520,7 @@ class OrderController extends Controller
             DB::beginTransaction();
 
             $order = Order::findOrFail($request->order_id);
-            
+
             // Verificar que el porcentaje no exceda el disponible
             $remainingPercentage = $order->remaining_percentage;
             if ($request->percentage > $remainingPercentage) {
@@ -569,7 +569,7 @@ class OrderController extends Controller
     protected function createApprovalToken($order, $user)
     {
         $token = \Illuminate\Support\Str::random(64);
-        
+
         // Crear la aprobación con el token
         OrderApproval::create([
             'order_id' => $order->id,
@@ -585,14 +585,14 @@ class OrderController extends Controller
     {
         try {
             Log::info('Iniciando aprobación por email con token: ' . $token);
-            
+
             DB::beginTransaction();
-            
+
             // Buscar la aprobación y cargar las relaciones
             $approval = OrderApproval::where('token', $token)
                 ->with(['order', 'order.approvals'])
                 ->first();
-            
+
             if (!$approval) {
                 Log::warning('Token no encontrado: ' . $token);
                 return view('orders.token-used', [
@@ -639,7 +639,7 @@ class OrderController extends Controller
                     'status' => 'aprobado',
                     'approved_at' => now()
                 ]);
-                
+
                 if (!$approval->save()) {
                     throw new \Exception('No se pudo guardar la aprobación');
                 }
@@ -700,7 +700,7 @@ class OrderController extends Controller
             DB::rollback();
             Log::error('Error completo en approveByEmail: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+
             return view('orders.token-used', [
                 'order' => isset($order) ? $order : null,
                 'error' => 'Error al procesar la aprobación. Por favor, inténtalo de nuevo.',
