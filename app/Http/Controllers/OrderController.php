@@ -410,6 +410,23 @@ class OrderController extends Controller
         }
     }
 
+    public function updateExchangeRate(Request $request, Order $order)
+    {
+        try {
+            $request->validate([
+                'exchange_rate' => 'required|numeric|min:0'
+            ]);
+
+            $order->update([
+                'exchange_rate' => $request->exchange_rate
+            ]);
+
+            return redirect()->back()->with('success', 'Tasa de cambio actualizada exitosamente.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al actualizar la tasa de cambio.');
+        }
+    }
+
     public function downloadPdf($id, Request $request)
     {
         $order = Order::with(['user', 'supplier', 'items', 'approvals'])
