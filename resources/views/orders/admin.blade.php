@@ -21,13 +21,21 @@
     @include('components.exchange-rate')
 
     <div class="mb-4">
-        <label for="department_filter" class="block text-sm font-medium text-gray-700">Filtrar por Departamento:</label>
-        <select id="department_filter" class="mt-1 block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-            <option value="">Todos los departamentos</option>
-            @foreach($departments as $department)
-                <option value="{{ $department }}">{{ $department }}</option>
-            @endforeach
-        </select>
+        <div class="flex gap-4">
+            <div class="flex-1">
+                <label for="search" class="block text-sm font-medium text-gray-700">Buscar por nombre o número:</label>
+                <input type="text" id="search" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Escribe para buscar...">
+            </div>
+            <div>
+                <label for="department_filter" class="block text-sm font-medium text-gray-700">Filtrar por Departamento:</label>
+                <select id="department_filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Todos los departamentos</option>
+                    @foreach($departments as $department)
+                        <option value="{{ $department }}">{{ $department }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
     </div>
 
     <div class="bg-white shadow-md rounded my-6">
@@ -198,6 +206,34 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search');
+    const departmentFilter = document.getElementById('department_filter');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedDepartment = departmentFilter.value;
+
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const department = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            
+            const matchesSearch = text.includes(searchTerm);
+            const matchesDepartment = selectedDepartment === '' || department === selectedDepartment.toLowerCase();
+            
+            row.style.display = matchesSearch && matchesDepartment ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    departmentFilter.addEventListener('change', filterTable);
+});
+</script>
+@endpush
 
 @push('scripts')
 <script>
