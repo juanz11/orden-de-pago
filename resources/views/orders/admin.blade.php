@@ -192,6 +192,30 @@
                                     </div>
                                 </div>
                             @endif
+                            @if($order->status === 'pendiente')
+                                <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex space-x-2">
+                                    @csrf
+                                    <input type="hidden" name="status" value="aprobado">
+                                    <input type="hidden" name="exchange_rate" value="{{ $order->exchange_rate ?? '' }}">
+                                    <button type="submit" 
+                                            class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        Aprobar
+                                    </button>
+                                </form>
+                                <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex space-x-2">
+                                    @csrf
+                                    <input type="hidden" name="status" value="rechazado">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" name="admin_comments" 
+                                               placeholder="Comentarios..." 
+                                               class="text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <button type="submit" 
+                                                class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                            Rechazar
+                                        </button>
+                                    </div>
+                                </form>
+                            @endif
                         </div>
                         </div>
                     </td>

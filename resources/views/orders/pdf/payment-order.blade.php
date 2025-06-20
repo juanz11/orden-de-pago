@@ -103,6 +103,13 @@
         <p><strong>TOTAL:</strong> {{ $formatNumber($order->total) }} Bs</p>
     </div>
 
+    @if($order->observations)
+    <div style="margin-top: 20px;">
+        <p style="color: red; font-weight: bold;">Observaciones:</p>
+        <p style="color: red; font-weight: bold;">{{ $order->observations }}</p>
+    </div>
+    @endif
+
 
 </body>
 </html>
