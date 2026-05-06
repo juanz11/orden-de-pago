@@ -1,7 +1,8 @@
 @php
-    $response = Http::get('https://pydolarve.org/api/v1/dollar?page=bcv');
+    $response = Http::get('https://ve.dolarapi.com/v1/dolares');
     $data = $response->json();
-    $usdRate = $data['monitors']['usd']['price'] ?? null;
+    $oficialRate = collect($data)->firstWhere('fuente', 'oficial');
+    $usdRate = $oficialRate['promedio'] ?? null;
 @endphp
 
 @if($usdRate)
