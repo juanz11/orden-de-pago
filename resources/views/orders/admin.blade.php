@@ -21,19 +21,28 @@
     @include('components.exchange-rate')
 
     <div class="mb-4">
-        <label for="department_filter" class="block text-sm font-medium text-gray-700">Filtrar por Departamento:</label>
-        <select id="department_filter" class="mt-1 block w-64 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-            <option value="">Todos los departamentos</option>
-            @foreach($departments as $department)
-                <option value="{{ $department }}">{{ $department }}</option>
-            @endforeach
-        </select>
+        <div class="flex gap-4">
+            <div class="flex-1">
+                <label for="search" class="block text-sm font-medium text-gray-700">Buscar por nombre o número:</label>
+                <input type="text" id="search" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Escribe para buscar...">
+            </div>
+            <div>
+                <label for="department_filter" class="block text-sm font-medium text-gray-700">Filtrar por Departamento:</label>
+                <select id="department_filter" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                    <option value="">Todos los departamentos</option>
+                    @foreach($departments as $department)
+                        <option value="{{ $department }}">{{ $department }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
     </div>
 
     <div class="bg-white shadow-md rounded my-6">
         <table class="min-w-full table-auto">
             <thead>
                 <tr class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                    <th class="py-3 px-6 text-left">Número de orden</th>
                     <th class="py-3 px-6 text-left">Usuario</th>
                     <th class="py-3 px-6 text-left">Departamento</th>
                     <th class="py-3 px-6 text-left">Proveedor</th>
@@ -48,6 +57,9 @@
             <tbody class="text-gray-600 text-sm font-light">
                 @foreach($orders as $order)
                 <tr class="border-b border-gray-200 hover:bg-gray-100">
+                    <td class="py-3 px-6 text-left font-medium">
+                        #{{ str_pad($order->id, 6, '0', STR_PAD_LEFT) }}
+                    </td>
                     <td class="py-3 px-6 text-left">
                         {{ $order->user->name }}
                     </td>
@@ -121,42 +133,37 @@
                                    class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     Editar
                                 </a>
-                                
-                                @if(!$order->hasUserApproved(auth()->id()))
-                                    <form action="{{ route('orders.update-status', $order) }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="status" value="aprobado">
-                                        <div class="flex flex-col space-y-2">
-                                            @if($order->approval_count === 2)
-                                                <input type="number" name="exchange_rate" step="0.01" min="0" 
-                                                       placeholder="Tasa Bs/USD"
-                                                       class="text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                            @endif
-                                            <input type="text" name="admin_comments" 
-                                                   placeholder="Comentarios"
-                                                   class="text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                            <button type="submit" 
-                                                    class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                                                Aprobar
-                                            </button>
-                                        </div>
-                                    </form>
-
-                                    <form action="{{ route('orders.update-status', $order) }}" method="POST">
-                                        @csrf
-                                        <input type="hidden" name="status" value="rechazado">
-                                        <div class="flex flex-col space-y-2">
-                                            <input type="text" name="admin_comments" 
-                                                   placeholder="Razón del rechazo" required
-                                                   class="text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
-                                            <button type="submit" 
-                                                    class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                                                Rechazar
-                                            </button>
-                                        </div>
-                                    </form>
-                                @endif
                             @endif
+
+                            <div class="flex space-x-4">
+                                <form action="{{ route('orders.update-exchange-rate', $order) }}" method="POST" class="inline-block">
+                                    @csrf
+                                    <div class="flex space-x-2">
+                                        <input type="number" name="exchange_rate" step="0.01" min="0" 
+                                               placeholder="Tasa Bs/USD"
+                                               value="{{ $order->exchange_rate ?? '' }}"
+                                               class="text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <button type="submit"
+                                                class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded  bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500" style="
+    background: revert;
+    border-color: black;
+">
+                                            Actualizar Tasa
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <form action="{{ route('orders.resend-emails', $order) }}" method="POST" class="inline-block">
+                                    @csrf
+                                    <button type="submit" 
+                                            class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded  bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500" style="
+    background: revert;
+    border-color: black;"
+>
+                                        Reenviar Correos
+                                    </button>
+                                </form>
+                            </div>
 
                             @if($order->status === 'aprobado')
                                 <div class="space-y-2">
@@ -185,6 +192,31 @@
                                     </div>
                                 </div>
                             @endif
+                            @if($order->status === 'pendiente')
+                                <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex space-x-2">
+                                    @csrf
+                                    <input type="hidden" name="status" value="aprobado">
+                                    <input type="hidden" name="exchange_rate" value="{{ $order->exchange_rate ?? '' }}">
+                                    <button type="submit" 
+                                            class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                                        Aprobar
+                                    </button>
+                                </form>
+                                <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex space-x-2">
+                                    @csrf
+                                    <input type="hidden" name="status" value="rechazado">
+                                    <div class="flex items-center space-x-2">
+                                        <input type="text" name="admin_comments" 
+                                               placeholder="Comentarios..." 
+                                               class="text-xs rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                        <button type="submit" 
+                                                class="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                                            Rechazar
+                                        </button>
+                                    </div>
+                                </form>
+                            @endif
+                        </div>
                         </div>
                     </td>
                 </tr>
@@ -198,6 +230,34 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search');
+    const departmentFilter = document.getElementById('department_filter');
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    function filterTable() {
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedDepartment = departmentFilter.value;
+
+        tableRows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            const department = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+            
+            const matchesSearch = text.includes(searchTerm);
+            const matchesDepartment = selectedDepartment === '' || department === selectedDepartment.toLowerCase();
+            
+            row.style.display = matchesSearch && matchesDepartment ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('input', filterTable);
+    departmentFilter.addEventListener('change', filterTable);
+});
+</script>
+@endpush
 
 @push('scripts')
 <script>

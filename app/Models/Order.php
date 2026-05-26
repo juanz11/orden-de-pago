@@ -22,6 +22,7 @@ class Order extends Model
         'user_id',
         'supplier_id',
         'other_supplier',
+        'payment_condition',
         'total',
         'observations',
         'exchange_rate',

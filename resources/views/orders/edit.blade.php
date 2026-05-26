@@ -106,6 +106,17 @@
                         </div>
                     </div>
 
+                    <div class="mb-4">
+                        <label for="observations" class="block text-sm font-medium text-gray-700">Observaciones</label>
+                        <input type="text" name="observations" id="observations" 
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                               value="{{ $order->observations }}"
+                               placeholder="OBSERVACIONES:">
+                        @error('observations')
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <div class="flex items-center justify-end space-x-3">
                         <a href="{{ route('orders.index') }}" 
                             class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">

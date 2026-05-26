@@ -2,26 +2,28 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Order;
-use App\Models\OrderPayment;
-use App\Models\User;
-use App\Models\OrderItem;
-use App\Models\OrderApproval;
-use App\Models\Supplier;
-use App\Mail\OrderCreated;
-use App\Mail\NewOrderMail;
 use App\Mail\OrderConfirmed;
+use App\Services\ExchangeRateService;
+use App\Mail\OrderCreated;
+use App\Mail\OrderNeedsFinalApproval;
+use App\Mail\NewOrderMail;
+use App\Models\Order;
+use App\Models\OrderApproval;
+use App\Models\OrderApprovalToken;
+use App\Models\OrderItem;
+use App\Models\OrderPayment;
+use App\Models\Supplier;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\OrderApprovalToken;
 
 class OrderController extends Controller
 {
@@ -43,9 +45,9 @@ class OrderController extends Controller
         ])
         ->latest()
         ->paginate(10);
-        
+
         $departments = User::distinct('department')->pluck('department')->filter();
-        
+
         return view('orders.admin', [
             'orders' => $orders,
             'departments' => $departments
@@ -61,9 +63,28 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         try {
+            // Validar que el token del formulario exista y no haya sido usado
+            if (!$request->has('form_token')) {
+                throw ValidationException::withMessages([
+                    'form_token' => ['Token de formulario inválido']
+                ]);
+            }
+
+            // Usar una llave única en caché para este token
+            $cacheKey = 'order_submission_' . $request->form_token;
+
+            // Intentar establecer la llave en caché. Si ya existe, es un reenvío
+            if (!cache()->add($cacheKey, true, now()->addMinutes(30))) {
+                return redirect()->route('orders.index')
+                    ->with('warning', 'Esta orden ya fue procesada. Por favor, no reenvíe el formulario.');
+            }
+
             $request->validate([
                 'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
                 'other_supplier' => 'nullable|string|required_without:supplier_id',
+                'payment_condition' => 'nullable|string',
+                'payment_voucher' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048',
+                'observations' => 'nullable|string',
                 'items' => 'required|array|min:1',
                 'items.*.description' => 'required|string',
                 'items.*.unit_price' => 'required|numeric|min:0',
@@ -75,6 +96,8 @@ class OrderController extends Controller
             $order = new Order([
                 'supplier_id' => $request->supplier_id !== 'otro' ? $request->supplier_id : null,
                 'other_supplier' => $request->supplier_id === 'otro' ? $request->other_supplier : null,
+                'payment_condition' => $request->payment_condition,
+                'observations' => $request->observations,
                 'status' => 'pendiente',
                 'total' => 0
             ]);
@@ -97,38 +120,50 @@ class OrderController extends Controller
 
             DB::commit();
 
+            // Mantener el token en caché para prevenir reenvíos
+            cache()->put($cacheKey, true, now()->addMinutes(30));
+
             try {
                 // Enviar correo al solicitante (sin botón de aprobación)
                 Log::info('Enviando correo al solicitante: ' . $order->user->email);
-                Mail::to($order->user->email)
-                    ->send(new NewOrderMail($order));
+                $email = new NewOrderMail($order);
 
-                // Enviar correos a los administradores con token de aprobación
-                $admins = User::whereIn('role', ['admin', 'superadmin'])->get();
+                // Adjuntar el comprobante si se ha subido
+                if ($request->hasFile('payment_voucher')) {
+                    $file = $request->file('payment_voucher');
+                    $email->attach($file->getRealPath(), [
+                        'as' => $file->getClientOriginalName()
+                    ]);
+                }
+
+                Mail::to($order->user->email)->send($email);
+
+                // Enviar correos a todos los administradores excepto al creador
+                $admins = User::where('role', 'admin')
+                    ->where('id', '!=', auth()->id())
+                    ->get();
+
                 foreach ($admins as $admin) {
-                    if ($order->status === 'pendiente') {
-                        $token = \Illuminate\Support\Str::random(64);
-                        $approval = new OrderApproval([
-                            'order_id' => $order->id,
-                            'user_id' => $admin->id,
-                            'status' => 'pendiente',
-                            'token' => $token
+                    $token = $this->createApprovalToken($order, $admin);
+
+                    Log::info('Enviando correo al administrador: ' . $admin->email);
+                    $email = new NewOrderMail($order, $token);
+                    if ($request->hasFile('payment_voucher')) {
+                        $file = $request->file('payment_voucher');
+                        $email->attach($file->getRealPath(), [
+                            'as' => $file->getClientOriginalName()
                         ]);
-                        $approval->save();
-                        
-                        Log::info('Enviando correo al administrador: ' . $admin->email);
-                        Mail::to($admin->email)
-                            ->send(new NewOrderMail($order, $token));
-                    } else {
-                        Log::info('Enviando correo al administrador: ' . $admin->email);
-                        Mail::to($admin->email)
-                            ->send(new NewOrderMail($order));
                     }
+                    Mail::to($admin->email)->send($email);
                 }
             } catch (\Exception $e) {
                 Log::error('Error al enviar correos: ' . $e->getMessage());
                 Log::error($e->getTraceAsString());
             }
+
+            // Redirigir con mensaje de éxito
+            return redirect()->route('orders.index')
+                ->with('success', 'Orden creada correctamente.');
 
             return redirect()->route('orders.index')->with('success', 'Orden creada correctamente.');
 
@@ -143,18 +178,43 @@ class OrderController extends Controller
 
     public function edit(Order $order)
     {
-        if (!Gate::allows('update', $order)) {
-            abort(403, 'No tienes permiso para editar esta orden.');
+        // Solo administradores pueden editar órdenes
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'No tienes permiso para editar órdenes');
         }
-        
+
         $suppliers = Supplier::all();
         return view('orders.edit', compact('order', 'suppliers'));
     }
 
+    public function cancelOrder(Order $order)
+    {
+        // Verificar que el usuario sea el dueño de la orden
+        if (auth()->id() !== $order->user_id) {
+            abort(403, 'No tienes permiso para cancelar esta orden');
+        }
+
+        // Verificar que la orden esté pendiente
+        if ($order->status !== 'pendiente') {
+            return redirect()->route('orders.index')
+                ->with('error', 'Solo se pueden cancelar órdenes pendientes');
+        }
+
+        // Actualizar el estado a rechazado (usamos este estado ya que no hay uno específico para cancelado)
+        $order->update([
+            'status' => Order::STATUS_REJECTED,
+            'admin_comments' => 'Cancelado por el usuario'
+        ]);
+
+        return redirect()->route('orders.index')
+            ->with('success', 'Orden cancelada correctamente');
+    }
+
     public function update(Request $request, Order $order)
     {
-        if (!Gate::allows('update', $order)) {
-            abort(403, 'No tienes permiso para editar esta orden.');
+        // Solo administradores pueden actualizar órdenes
+        if (!auth()->user()->isAdmin()) {
+            abort(403, 'No tienes permiso para actualizar órdenes');
         }
 
         if ($order->status !== Order::STATUS_PENDING) {
@@ -164,6 +224,7 @@ class OrderController extends Controller
         $request->validate([
             'supplier_id' => 'nullable|exists:suppliers,id|required_without:other_supplier',
             'other_supplier' => 'nullable|string|required_without:supplier_id',
+            'observations' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.description' => 'required|string',
             'items.*.unit_price' => 'required|numeric|min:0',
@@ -175,6 +236,7 @@ class OrderController extends Controller
             $order->update([
                 'supplier_id' => $request->supplier_id !== 'otro' ? $request->supplier_id : null,
                 'other_supplier' => $request->supplier_id === 'otro' ? $request->other_supplier : null,
+                'observations' => $request->observations,
             ]);
 
             // Eliminar items existentes
@@ -214,7 +276,7 @@ class OrderController extends Controller
         DB::beginTransaction();
         try {
             $existingApproval = $order->approvals()->where('user_id', auth()->id())->first();
-            
+
             if ($existingApproval) {
                 if ($existingApproval->status === $request->status) {
                     return redirect()->back()->with('error', 'Ya has registrado tu aprobación para esta orden.');
@@ -222,14 +284,16 @@ class OrderController extends Controller
                 // Actualizar la aprobación existente
                 $existingApproval->update([
                     'status' => $request->status,
-                    'comments' => $request->admin_comments
+                    'comments' => $request->admin_comments,
+                    'approved_at' => $request->status === 'aprobado' ? now() : null
                 ]);
             } else {
                 // Crear nueva aprobación
                 $order->approvals()->create([
                     'user_id' => auth()->id(),
                     'status' => $request->status,
-                    'comments' => $request->admin_comments
+                    'comments' => $request->admin_comments,
+                    'approved_at' => $request->status === 'aprobado' ? now() : null
                 ]);
             }
 
@@ -251,9 +315,14 @@ class OrderController extends Controller
             });
 
             if ($request->status === 'aprobado') {
-                foreach ($otherAdmins as $admin) {
-                    Mail::to($admin->email)
-                        ->send(new OrderConfirmed($order, $currentAdmin, $pendingAdmins->all()));
+
+                // Si hay 2 aprobaciones, enviar correo al superadmin
+                if ($approvalCount === 2) {
+                    $superadmin = User::where('role', 'superadmin')->first();
+                    if ($superadmin) {
+                        $token = $this->createApprovalToken($order, $superadmin);
+                        Mail::to($superadmin->email)->send(new OrderNeedsFinalApproval($order, $token));
+                    }
                 }
 
                 // Si hay suficientes aprobaciones, actualizar el estado de la orden
@@ -263,8 +332,23 @@ class OrderController extends Controller
                         'exchange_rate' => $request->exchange_rate
                     ]);
 
-                    // Enviar notificación al usuario creador
-                    Mail::to($order->user->email)->send(new OrderCreated($order));
+                    // Cargar relaciones necesarias para el correo
+                    $order->load(['user', 'supplier', 'items', 'approvals.user']);
+                    
+                    // Enviar notificación de confirmación al usuario creador
+                    Mail::to($order->user->email)->send(new OrderConfirmed($order));
+                    
+                    // También enviar notificación a todos los administradores que aprobaron
+                    $approvingAdmins = $order->approvals()
+                        ->where('status', 'aprobado')
+                        ->with('user')
+                        ->get();
+                    
+                    foreach ($approvingAdmins as $approval) {
+                        if ($approval->user->id !== $order->user_id) {
+                            Mail::to($approval->user->email)->send(new OrderConfirmed($order));
+                        }
+                    }
                 }
             } elseif ($request->status === 'rechazado') {
                 $order->update([
@@ -291,18 +375,94 @@ class OrderController extends Controller
                 'observations' => 'required|string|max:1000'
             ]);
 
-            \Log::info('Actualizando observaciones para orden #' . $order->id, [
-                'observations' => $request->observations
-            ]);
-
             $order->update([
                 'observations' => $request->observations
             ]);
 
-            return redirect()->back()->with('success', 'Observaciones actualizadas correctamente');
+            return redirect()->back()->with('success', 'Observaciones actualizadas exitosamente.');
         } catch (\Exception $e) {
-            \Log::error('Error al actualizar observaciones: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Error al actualizar observaciones: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al actualizar las observaciones.');
+        }
+    }
+
+    public function resendEmails(Request $request, Order $order)
+    {
+        try {
+            // Si la orden ya está aprobada, enviar correo de confirmación
+            if ($order->status === 'aprobado' && $order->isFullyApproved()) {
+                // Cargar relaciones necesarias para el correo
+                $order->load(['user', 'supplier', 'items', 'approvals.user']);
+                
+                Log::info('Reenviando correo de confirmación al solicitante: ' . $order->user->email);
+                Mail::to($order->user->email)->send(new OrderConfirmed($order));
+                
+                // También enviar a todos los administradores que aprobaron
+                $approvingAdmins = $order->approvals()
+                    ->where('status', 'aprobado')
+                    ->with('user')
+                    ->get();
+                
+                foreach ($approvingAdmins as $approval) {
+                    if ($approval->user->id !== $order->user_id) {
+                        Log::info('Reenviando correo de confirmación al administrador: ' . $approval->user->email);
+                        Mail::to($approval->user->email)->send(new OrderConfirmed($order));
+                    }
+                }
+            } else {
+                // Enviar correo al solicitante (orden no aprobada aún)
+                Log::info('Reenviando correo al solicitante: ' . $order->user->email);
+                $email = new OrderCreated($order);
+                Mail::to($order->user->email)->send($email);
+
+                // Enviar correos a todos los administradores
+                $admins = User::where('role', 'admin')->get();
+                foreach ($admins as $admin) {
+                    Log::info('Reenviando correo al administrador: ' . $admin->email);
+                    
+                    // Solo enviar correo si el admin no ha aprobado la orden
+                    if (!$order->hasUserApproved($admin->id)) {
+                        $email = new OrderCreated($order);
+                        Mail::to($admin->email)->send($email);
+                    }
+                }
+            }
+
+            // Si hay 2 aprobaciones y la orden no está aprobada, enviar correo al superadmin
+            if ($order->approval_count === 2 && $order->status !== 'aprobado') {
+                $superadmin = User::where('role', 'superadmin')->first();
+                if ($superadmin) {
+                    // Verificar si ya existe un token para el superadmin
+                    $existingApproval = OrderApproval::where('order_id', $order->id)
+                        ->where('user_id', $superadmin->id)
+                        ->first();
+                    
+                    $token = $existingApproval ? $existingApproval->token : $this->createApprovalToken($order, $superadmin);
+                    Log::info('Reenviando correo al superadmin: ' . $superadmin->email);
+                    Mail::to($superadmin->email)->send(new OrderNeedsFinalApproval($order, $token));
+                }
+            }
+
+            return redirect()->back()->with('success', 'Correos reenviados exitosamente.');
+        } catch (\Exception $e) {
+            Log::error('Error al reenviar correos: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error al reenviar los correos.');
+        }
+    }
+
+    public function updateExchangeRate(Request $request, Order $order)
+    {
+        try {
+            $request->validate([
+                'exchange_rate' => 'required|numeric|min:0'
+            ]);
+
+            $order->update([
+                'exchange_rate' => $request->exchange_rate
+            ]);
+
+            return redirect()->back()->with('success', 'Tasa de cambio actualizada exitosamente.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error al actualizar la tasa de cambio.');
         }
     }
 
@@ -312,10 +472,11 @@ class OrderController extends Controller
             ->findOrFail($id);
 
         $currency = $request->query('currency', 'bs');
-        
+
         // Obtener la tasa BCV actual
-        $exchangeRate = $order->exchange_rate ?: 88.72; // Si no hay tasa en la orden, usar la actual
-        
+        $exchangeRateService = new ExchangeRateService();
+        $exchangeRate = $order->exchange_rate ?: $exchangeRateService->getCurrentRate(); // Si no hay tasa en la orden, usar la actual
+
         // Formatear números según la moneda seleccionada
         $formatNumber = function($number) use ($currency, $exchangeRate) {
             if ($currency === 'usd') {
@@ -338,10 +499,10 @@ class OrderController extends Controller
             'formatExchangeRate' => $formatExchangeRate,
             'exchangeRate' => $exchangeRate
         ]);
-        
+
         // Configurar el tamaño de página a 214 × 277 mm
         $pdf->setPaper([0, 0, 606.77, 785.2]); // Convertido de mm a puntos (1mm = 2.83465 puntos)
-        
+
         $currencyText = $currency === 'usd' ? 'usd' : 'bs';
         return $pdf->download("orden-de-pago-{$order->id}-{$currencyText}.pdf");
     }
@@ -349,7 +510,7 @@ class OrderController extends Controller
     public function downloadPaymentOrder(Order $order, Request $request)
     {
         $currency = $request->query('currency', 'bs');
-        
+
         // Formatear números para Bs con punto como separador de miles
         $formatNumber = function($number) use ($currency, $order) {
             if ($currency === 'usd' && $order->exchange_rate) {
@@ -452,7 +613,7 @@ class OrderController extends Controller
             DB::beginTransaction();
 
             $order = Order::findOrFail($request->order_id);
-            
+
             // Verificar que el porcentaje no exceda el disponible
             $remainingPercentage = $order->remaining_percentage;
             if ($request->percentage > $remainingPercentage) {
@@ -500,26 +661,31 @@ class OrderController extends Controller
 
     protected function createApprovalToken($order, $user)
     {
-        return OrderApprovalToken::create([
+        $token = \Illuminate\Support\Str::random(64);
+
+        // Crear la aprobación con el token
+        OrderApproval::create([
             'order_id' => $order->id,
             'user_id' => $user->id,
-            'token' => \Illuminate\Support\Str::random(64),
-            'expires_at' => now()->addDay(),
+            'token' => $token,
+            'status' => 'pendiente'
         ]);
+
+        return $token;
     }
 
     public function approveByEmail($token)
     {
         try {
             Log::info('Iniciando aprobación por email con token: ' . $token);
-            
+
             DB::beginTransaction();
-            
+
             // Buscar la aprobación y cargar las relaciones
             $approval = OrderApproval::where('token', $token)
                 ->with(['order', 'order.approvals'])
                 ->first();
-            
+
             if (!$approval) {
                 Log::warning('Token no encontrado: ' . $token);
                 return view('orders.token-used', [
@@ -566,7 +732,7 @@ class OrderController extends Controller
                     'status' => 'aprobado',
                     'approved_at' => now()
                 ]);
-                
+
                 if (!$approval->save()) {
                     throw new \Exception('No se pudo guardar la aprobación');
                 }
@@ -580,24 +746,20 @@ class OrderController extends Controller
 
                 Log::info('Conteo de aprobaciones: ' . $approvedCount);
 
-                // Si tenemos 3 o más aprobaciones, actualizar el estado de la orden
                 // Obtener todos los administradores
                 $allAdmins = User::whereIn('role', ['admin', 'superadmin'])->get();
-                $currentAdmin = User::find($approval->user_id);
 
-                // Obtener administradores que aún no han aprobado
-                $pendingAdmins = $allAdmins->filter(function($admin) use ($order) {
-                    return !$order->approvals()->where('user_id', $admin->id)->where('status', 'aprobado')->exists();
-                });
+                // Si hay 2 aprobaciones, notificar a los superadmins
+                if ($approvedCount == 2) {
+                    $superadmins = User::where('role', 'superadmin')->get();
 
-                // Enviar notificación a otros administradores sobre la aprobación
-                $otherAdmins = $allAdmins->filter(function($admin) use ($currentAdmin) {
-                    return $admin->id !== $currentAdmin->id;
-                });
-
-                foreach ($otherAdmins as $admin) {
-                    Mail::to($admin->email)
-                        ->send(new OrderConfirmed($order, $currentAdmin, $pendingAdmins->all()));
+                    foreach ($superadmins as $superadmin) {
+                        $token = $this->createApprovalToken($order, $superadmin);
+                        if ($token) {
+                            Mail::to($superadmin->email)
+                                ->send(new OrderNeedsFinalApproval($order, $token));
+                        }
+                    }
                 }
 
                 // Si hay suficientes aprobaciones, actualizar el estado de la orden
@@ -608,8 +770,23 @@ class OrderController extends Controller
                     }
                     Log::info('Orden marcada como aprobada');
 
-                    // Enviar notificación al usuario creador
-                    Mail::to($order->user->email)->send(new OrderCreated($order));
+                    // Cargar relaciones necesarias para el correo
+                    $order->load(['user', 'supplier', 'items', 'approvals.user']);
+                    
+                    // Enviar notificación de confirmación al usuario creador
+                    Mail::to($order->user->email)->send(new OrderConfirmed($order));
+                    
+                    // También enviar notificación a todos los administradores que aprobaron
+                    $approvingAdmins = $order->approvals()
+                        ->where('status', 'aprobado')
+                        ->with('user')
+                        ->get();
+                    
+                    foreach ($approvingAdmins as $approval) {
+                        if ($approval->user->id !== $order->user_id) {
+                            Mail::to($approval->user->email)->send(new OrderConfirmed($order));
+                        }
+                    }
                 }
 
                 DB::commit();
@@ -631,7 +808,7 @@ class OrderController extends Controller
             DB::rollback();
             Log::error('Error completo en approveByEmail: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+
             return view('orders.token-used', [
                 'order' => isset($order) ? $order : null,
                 'error' => 'Error al procesar la aprobación. Por favor, inténtalo de nuevo.',
@@ -668,6 +845,24 @@ class OrderController extends Controller
             // Verificar si la orden está completamente aprobada
             if ($order->isFullyApproved()) {
                 $order->update(['status' => 'aprobado']);
+                
+                // Cargar relaciones necesarias para el correo
+                $order->load(['user', 'supplier', 'items', 'approvals.user']);
+                
+                // Enviar notificación de confirmación al usuario creador
+                Mail::to($order->user->email)->send(new OrderConfirmed($order));
+                
+                // También enviar notificación a todos los administradores que aprobaron
+                $approvingAdmins = $order->approvals()
+                    ->where('status', 'aprobado')
+                    ->with('user')
+                    ->get();
+                
+                foreach ($approvingAdmins as $approval) {
+                    if ($approval->user->id !== $order->user_id) {
+                        Mail::to($approval->user->email)->send(new OrderConfirmed($order));
+                    }
+                }
             }
 
             DB::commit();

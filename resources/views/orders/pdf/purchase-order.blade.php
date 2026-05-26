@@ -111,8 +111,7 @@
                     <strong>Fecha de la orden:</strong> {{ $order->created_at->format('d/m/Y') }}<br>
                     <strong>Fecha de Entrega:</strong> {{ $order->created_at->format('d/m/Y') }}<br>
                     <strong>Contacto:</strong> {{ $order->supplier ? $order->supplier->contact_name : '' }}<br>
-                    <strong>Condición de Pago:</strong> {{ $order->payment_condition }}<br>
-    
+                    <strong>Condición de Pago:</strong> {{ $order->supplier ? $order->supplier->payment_condition : '' }}<br>
                     @if($order->exchange_rate)
                     <strong>Tasa de cambio:</strong> {{ number_format($order->exchange_rate, 2, ',', '.') }} Bs/USD
                     @endif
@@ -138,12 +137,8 @@
                 <td style="padding: 1px 2px; text-align: left;">{{ $item->description }}</td>
                 <td style="padding: 1px 2px; text-align: center;">{{ $item->quantity }}</td>
                 @if($currency === 'usd')
-                @php
-                    $exchangeRateService = app(App\Services\ExchangeRateService::class);
-                    $exchange_rate = $order->exchange_rate ?: $exchangeRateService->getCurrentRate();
-                @endphp
-                <td style="padding: 1px 2px; text-align: right;">$ {{ number_format($item->unit_price / $exchange_rate, 2, '.', ',') }}</td>
-                <td style="padding: 1px 2px; text-align: right;">$ {{ number_format(($item->quantity * $item->unit_price) / $exchange_rate, 2, '.', ',') }}</td>
+                <td style="padding: 1px 2px; text-align: right;">$ {{ number_format($item->unit_price / $order->exchange_rate, 2, '.', ',') }}</td>
+                <td style="padding: 1px 2px; text-align: right;">$ {{ number_format(($item->quantity * $item->unit_price) / $order->exchange_rate, 2, '.', ',') }}</td>
                 @else
                 <td style="padding: 1px 2px; text-align: right;">Bs.F {{ number_format($item->unit_price, 2, ',', '.') }}</td>
                 <td style="padding: 1px 2px; text-align: right;">Bs.F {{ number_format($item->quantity * $item->unit_price, 2, ',', '.') }}</td>
@@ -166,11 +161,8 @@
                     <table style="width: 100%;">
                         <tr>
                             @if($currency === 'usd')
-                            @php
-                                $exchange_rate = $order->exchange_rate ?: $exchangeRateService->getCurrentRate(); // Si no hay tasa en la orden, usar la actual
-                            @endphp
                             <td><strong>SUB-TOTAL (USD):</strong></td>
-                            <td style="text-align: right;">$ {{ number_format($order->total / $exchange_rate, 2, '.', ',') }}</td>
+                            <td style="text-align: right;">$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
                             @else
                             <td><strong>SUB-TOTAL (Bs):</strong></td>
                             <td style="text-align: right;">Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
@@ -179,7 +171,7 @@
                         <tr>
                             @if($currency === 'usd')
                             <td><strong>TOTAL (USD)</strong></td>
-                            <td style="text-align: right;">$ {{ number_format($order->total / $exchange_rate, 2, '.', ',') }}</td>
+                            <td style="text-align: right;">$ {{ number_format($order->total / $order->exchange_rate, 2, '.', ',') }}</td>
                             @else
                             <td><strong>TOTAL (Bs)</strong></td>
                             <td style="text-align: right;">Bs.F {{ number_format($order->total, 2, ',', '.') }}</td>
@@ -188,7 +180,7 @@
                         @if($currency === 'usd')
                         <tr>
                             <td colspan="2" style="text-align: right; font-size: 0.8em; padding-top: 10px;">
-                                * Montos convertidos usando tasa: {{ number_format($exchange_rate, 2, ',', '.') }} Bs/USD
+                                * Montos convertidos usando tasa: {{ number_format($order->exchange_rate, 2, ',', '.') }} Bs/USD
                             </td>
                         </tr>
                         @endif
@@ -201,9 +193,8 @@
     <div class="company-instructions">
         <div style="border: 1px solid #ddd; padding: 10px; margin-top: 5px;">
             <strong>Es importante que se cumplan las indicaciones aquí señaladas.</strong><br>
-            1.- Factura a nombre de: SNC PHARMA C.A. RIF:J29855562-9<br>
-            2.- Dirección Fiscal: AV ANDRES ELOY BLANCO CC CENTRO PROFESIONAL PREBO NIVEL PISO 2 OF 214 URB PREBO VALENCIA CARABOBO ZONA POSTAL 2001<br>
-            3.- Se paga esta Orden de Compra a la TASA del Banco Central de Venezuela
+            1.- Facturar a: SNC PHARMA, C.A. RIF: J-29855562-9, Dirección Fiscal: Centro Profesional<br>
+            2.- Se cancela la Orden de Compra a la TASA del Banco Central de Venezuela -
         </div>
     </div>
 
@@ -217,7 +208,7 @@
                 </td>
                 <td style="width: 50%; padding: 20px; border: none;">
                     <div style="border-top: 1px solid black; text-align: center;">
-                        <div style="margin-top: 5px;">Representante Legal</div>
+                        
                         <div>Julio H. Brandt T.</div>
                     </div>
                 </td>

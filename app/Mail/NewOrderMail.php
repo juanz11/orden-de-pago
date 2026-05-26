@@ -6,6 +6,7 @@ use App\Models\Order;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use App\Services\ExchangeRateService;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class NewOrderMail extends Mailable
@@ -24,7 +25,8 @@ class NewOrderMail extends Mailable
     public function build()
     {
         // Obtener la tasa BCV actual
-        $exchangeRate = $this->order->exchange_rate ?: 88.72;
+        $exchangeRateService = new ExchangeRateService();
+        $exchangeRate = $this->order->exchange_rate ?: $exchangeRateService->getCurrentRate();
         
         // Formatear números para Bs con punto como separador de miles
         $formatNumber = function($number) use ($exchangeRate) {
@@ -36,13 +38,11 @@ class NewOrderMail extends Mailable
             return number_format($exchangeRate, 2, ',', '.');
         };
 
-        $pdf = PDF::loadView('orders.pdf.order-details', [
+        $pdf = PDF::loadView('orders.pdf.payment-order', [
             'order' => $this->order,
             'token' => $this->token,
             'currency' => 'bs',
-            'formatNumber' => $formatNumber,
-            'formatExchangeRate' => $formatExchangeRate,
-            'exchangeRate' => $exchangeRate
+            'formatNumber' => $formatNumber
         ]);
         
         // Configurar el tamaño de página a 214 × 277 mm

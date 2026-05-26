@@ -3,7 +3,6 @@
 namespace App\Mail;
 
 use App\Models\Order;
-use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
@@ -13,19 +12,15 @@ class OrderConfirmed extends Mailable
     use Queueable, SerializesModels;
 
     public $order;
-    public $confirmedBy;
-    public $pendingAdmins;
 
-    public function __construct(Order $order, User $confirmedBy, array $pendingAdmins)
+    public function __construct(Order $order)
     {
         $this->order = $order;
-        $this->confirmedBy = $confirmedBy;
-        $this->pendingAdmins = $pendingAdmins;
     }
 
     public function build()
     {
-        return $this->subject("Orden de Pago #{$this->order->id} confirmada")
+        return $this->subject("✅ Orden #{$this->order->id} Confirmada por 3 Usuarios")
                     ->markdown('emails.order-confirmed');
     }
 }

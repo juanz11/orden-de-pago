@@ -39,11 +39,14 @@
             margin-bottom: 20px;
         }
         .info-message {
-            background-color: #fff3cd;
-            color: #856404;
-            padding: 15px;
+            background-color: #ffebee;
+            color: #d32f2f;
+            padding: 20px;
             border-radius: 5px;
             margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-align: center;
         }
         .status {
             display: inline-block;

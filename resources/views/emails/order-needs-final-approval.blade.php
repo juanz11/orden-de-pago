@@ -2,11 +2,11 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Nueva Orden de Pago</title>
+    <title>Aprobación Final de Orden de Pago</title>
 </head>
 <body style="font-family: Arial, sans-serif; line-height: 1.6; margin: 0; padding: 20px;">
     <div style="max-width: 600px; margin: 0 auto; background: #fff;">
-        <h1 style="color: #333; text-align: center;">Nueva Orden de Pago #{{ $order->id }}</h1>
+        <h1 style="color: #333; text-align: center;">Aprobación Final - Orden de Pago #{{ $order->id }}</h1>
         
         <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 5px;">
             <h2 style="color: #444; margin-bottom: 15px;">Detalles de la orden:</h2>
@@ -14,7 +14,6 @@
             <p style="margin: 10px 0;"><strong>Departamento:</strong> {{ $order->user->department }}</p>
             <p style="margin: 10px 0;"><strong>Proveedor:</strong> {{ $order->supplier ? $order->supplier->name : $order->other_supplier }}</p>
             <p style="margin: 10px 0;"><strong>Fecha:</strong> {{ $order->created_at->format('d/m/Y') }}</p>
-            <p style="margin: 10px 0;"><strong>Estado:</strong> {{ $order->status }}</p>
         </div>
 
         <div style="margin: 20px 0;">
@@ -47,9 +46,14 @@
             </table>
         </div>
 
-        @if($token && $order->status === 'pendiente')
+        <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 5px;">
+            <h3 style="color: #444; margin-bottom: 15px;">Aprobaciones Actuales:</h3>
+            <p style="margin: 10px 0;">✓ Joel López - Director de Finanzas</p>
+            <p style="margin: 10px 0;">✓ Michel López - Tesorería</p>
+        </div>
+
         <div style="text-align: center; margin: 30px 0;">
-            <p style="margin: 10px 0;">Esta orden requiere su aprobación. Por favor, haga clic en el botón a continuación para aprobarla:</p>
+            <p style="margin: 10px 0;">Esta orden requiere su aprobación final. Por favor, haga clic en el botón a continuación para aprobarla:</p>
             <!-- Botón compatible con Outlook -->
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:separate;line-height:100%;">
               <tr>
@@ -63,14 +67,11 @@
               </tr>
             </table>
         </div>
-        @endif
 
         <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 14px;">
             <p>Gracias,<br>{{ config('app.name') }}</p>
-            @if($token && $order->status === 'pendiente')
             <p style="font-size: 12px; color: #999;">Si el botón no funciona, puede copiar y pegar este enlace en su navegador:<br>
             {{ route('orders.approve-by-email', ['token' => $token]) }}</p>
-            @endif
         </div>
     </div>
 </body>
