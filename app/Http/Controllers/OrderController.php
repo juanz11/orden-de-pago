@@ -284,14 +284,16 @@ class OrderController extends Controller
                 // Actualizar la aprobación existente
                 $existingApproval->update([
                     'status' => $request->status,
-                    'comments' => $request->admin_comments
+                    'comments' => $request->admin_comments,
+                    'approved_at' => $request->status === 'aprobado' ? now() : null
                 ]);
             } else {
                 // Crear nueva aprobación
                 $order->approvals()->create([
                     'user_id' => auth()->id(),
                     'status' => $request->status,
-                    'comments' => $request->admin_comments
+                    'comments' => $request->admin_comments,
+                    'approved_at' => $request->status === 'aprobado' ? now() : null
                 ]);
             }
 
@@ -330,8 +332,23 @@ class OrderController extends Controller
                         'exchange_rate' => $request->exchange_rate
                     ]);
 
-                    // Enviar notificación al usuario creador
-                    Mail::to($order->user->email)->send(new OrderCreated($order));
+                    // Cargar relaciones necesarias para el correo
+                    $order->load(['user', 'supplier', 'items', 'approvals.user']);
+                    
+                    // Enviar notificación de confirmación al usuario creador
+                    Mail::to($order->user->email)->send(new OrderConfirmed($order));
+                    
+                    // También enviar notificación a todos los administradores que aprobaron
+                    $approvingAdmins = $order->approvals()
+                        ->where('status', 'aprobado')
+                        ->with('user')
+                        ->get();
+                    
+                    foreach ($approvingAdmins as $approval) {
+                        if ($approval->user->id !== $order->user_id) {
+                            Mail::to($approval->user->email)->send(new OrderConfirmed($order));
+                        }
+                    }
                 }
             } elseif ($request->status === 'rechazado') {
                 $order->update([
@@ -371,20 +388,42 @@ class OrderController extends Controller
     public function resendEmails(Request $request, Order $order)
     {
         try {
-            // Enviar correo al solicitante
-            Log::info('Reenviando correo al solicitante: ' . $order->user->email);
-            $email = new OrderCreated($order);
-            Mail::to($order->user->email)->send($email);
-
-            // Enviar correos a todos los administradores
-            $admins = User::where('role', 'admin')->get();
-            foreach ($admins as $admin) {
-                Log::info('Reenviando correo al administrador: ' . $admin->email);
+            // Si la orden ya está aprobada, enviar correo de confirmación
+            if ($order->status === 'aprobado' && $order->isFullyApproved()) {
+                // Cargar relaciones necesarias para el correo
+                $order->load(['user', 'supplier', 'items', 'approvals.user']);
                 
-                // Solo enviar correo si el admin no ha aprobado la orden
-                if (!$order->hasUserApproved($admin->id)) {
-                    $email = new OrderCreated($order);
-                    Mail::to($admin->email)->send($email);
+                Log::info('Reenviando correo de confirmación al solicitante: ' . $order->user->email);
+                Mail::to($order->user->email)->send(new OrderConfirmed($order));
+                
+                // También enviar a todos los administradores que aprobaron
+                $approvingAdmins = $order->approvals()
+                    ->where('status', 'aprobado')
+                    ->with('user')
+                    ->get();
+                
+                foreach ($approvingAdmins as $approval) {
+                    if ($approval->user->id !== $order->user_id) {
+                        Log::info('Reenviando correo de confirmación al administrador: ' . $approval->user->email);
+                        Mail::to($approval->user->email)->send(new OrderConfirmed($order));
+                    }
+                }
+            } else {
+                // Enviar correo al solicitante (orden no aprobada aún)
+                Log::info('Reenviando correo al solicitante: ' . $order->user->email);
+                $email = new OrderCreated($order);
+                Mail::to($order->user->email)->send($email);
+
+                // Enviar correos a todos los administradores
+                $admins = User::where('role', 'admin')->get();
+                foreach ($admins as $admin) {
+                    Log::info('Reenviando correo al administrador: ' . $admin->email);
+                    
+                    // Solo enviar correo si el admin no ha aprobado la orden
+                    if (!$order->hasUserApproved($admin->id)) {
+                        $email = new OrderCreated($order);
+                        Mail::to($admin->email)->send($email);
+                    }
                 }
             }
 
@@ -731,8 +770,23 @@ class OrderController extends Controller
                     }
                     Log::info('Orden marcada como aprobada');
 
-                    // Enviar notificación al usuario creador
-                    Mail::to($order->user->email)->send(new OrderCreated($order));
+                    // Cargar relaciones necesarias para el correo
+                    $order->load(['user', 'supplier', 'items', 'approvals.user']);
+                    
+                    // Enviar notificación de confirmación al usuario creador
+                    Mail::to($order->user->email)->send(new OrderConfirmed($order));
+                    
+                    // También enviar notificación a todos los administradores que aprobaron
+                    $approvingAdmins = $order->approvals()
+                        ->where('status', 'aprobado')
+                        ->with('user')
+                        ->get();
+                    
+                    foreach ($approvingAdmins as $approval) {
+                        if ($approval->user->id !== $order->user_id) {
+                            Mail::to($approval->user->email)->send(new OrderConfirmed($order));
+                        }
+                    }
                 }
 
                 DB::commit();
@@ -791,6 +845,24 @@ class OrderController extends Controller
             // Verificar si la orden está completamente aprobada
             if ($order->isFullyApproved()) {
                 $order->update(['status' => 'aprobado']);
+                
+                // Cargar relaciones necesarias para el correo
+                $order->load(['user', 'supplier', 'items', 'approvals.user']);
+                
+                // Enviar notificación de confirmación al usuario creador
+                Mail::to($order->user->email)->send(new OrderConfirmed($order));
+                
+                // También enviar notificación a todos los administradores que aprobaron
+                $approvingAdmins = $order->approvals()
+                    ->where('status', 'aprobado')
+                    ->with('user')
+                    ->get();
+                
+                foreach ($approvingAdmins as $approval) {
+                    if ($approval->user->id !== $order->user_id) {
+                        Mail::to($approval->user->email)->send(new OrderConfirmed($order));
+                    }
+                }
             }
 
             DB::commit();
