@@ -23,6 +23,7 @@ Route::post('/register', [RegisterController::class, 'register']);
 
 // Rutas públicas para aprobación por correo
 Route::get('/orders/approve/{token}', [OrderController::class, 'approveByEmail'])->name('orders.approve-by-email');
+Route::post('/orders/approve/{token}', [OrderController::class, 'approveByEmail'])->name('orders.approve-by-email.submit');
 
 Route::middleware(['auth'])->group(function () {
     Route::middleware(['auth', 'verified'])->group(function () {

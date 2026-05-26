@@ -15,12 +15,14 @@ class OrderConfirmed extends Mailable
     public $order;
     public $confirmedBy;
     public $pendingAdmins;
+    public $observation;
 
-    public function __construct(Order $order, User $confirmedBy, array $pendingAdmins)
+    public function __construct(Order $order, User $confirmedBy, array $pendingAdmins, ?string $observation = null)
     {
         $this->order = $order;
         $this->confirmedBy = $confirmedBy;
         $this->pendingAdmins = $pendingAdmins;
+        $this->observation = $observation;
     }
 
     public function build()

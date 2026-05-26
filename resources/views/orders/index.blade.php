@@ -97,7 +97,7 @@
                             <form action="{{ route('orders.update-status', $order) }}" method="POST" class="flex items-center space-x-2">
                                 @csrf
                                 <input type="hidden" name="status" value="aprobado">
-                                <input type="text" name="admin_comments" placeholder="Comentarios"
+                                <input type="text" name="admin_comments" placeholder="Observación (opcional)"
                                     class="text-sm rounded-md border-black-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                 <button type="submit" class="bg-green-600 text-white text-xs px-2 py-1 rounded hover:bg-green-700">
                                     Aprobar

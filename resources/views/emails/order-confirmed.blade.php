@@ -3,6 +3,11 @@
 
 La orden de pago #{{ $order->id }} ha sido confirmada por el administrador **{{ $confirmedBy->name }}**.
 
+@if($observation)
+**Observación de {{ $confirmedBy->name }}:** {{ $observation }}
+
+@endif
+
 @if(count($pendingAdmins) > 0)
 ## Administradores pendientes por confirmar:
 @foreach($pendingAdmins as $admin)
