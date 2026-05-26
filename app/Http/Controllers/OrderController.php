@@ -674,7 +674,7 @@ class OrderController extends Controller
         return $token;
     }
 
-    public function approveByEmail($token)
+    public function approveByEmail(Request $request, $token)
     {
         try {
             Log::info('Iniciando aprobación por email con token: ' . $token);
@@ -724,13 +724,29 @@ class OrderController extends Controller
                 ]);
             }
 
+            if (!$request->isMethod('post')) {
+                DB::commit();
+                return view('orders.approve-by-email', [
+                    'order' => $order,
+                    'token' => $token,
+                    'approval' => $approval,
+                    'error' => null,
+                    'message' => null
+                ]);
+            }
+
+            $request->validate([
+                'comments' => 'nullable|string|max:1000'
+            ]);
+
             try {
                 Log::info('Actualizando aprobación...');
 
                 // Actualizar la aprobación
                 $approval->fill([
                     'status' => 'aprobado',
-                    'approved_at' => now()
+                    'approved_at' => now(),
+                    'comments' => $request->comments
                 ]);
 
                 if (!$approval->save()) {
