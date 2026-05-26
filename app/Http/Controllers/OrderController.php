@@ -207,7 +207,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'status' => 'required|in:aprobado,rechazado',
-            'admin_comments' => 'nullable|string',
+            'admin_comments' => 'nullable|string|max:1000',
             'exchange_rate' => 'required_if:approval_count,2|numeric|min:0'
         ]);
 
@@ -253,7 +253,7 @@ class OrderController extends Controller
             if ($request->status === 'aprobado') {
                 foreach ($otherAdmins as $admin) {
                     Mail::to($admin->email)
-                        ->send(new OrderConfirmed($order, $currentAdmin, $pendingAdmins->all()));
+                        ->send(new OrderConfirmed($order, $currentAdmin, $pendingAdmins->all(), $request->admin_comments));
                 }
 
                 // Si hay suficientes aprobaciones, actualizar el estado de la orden
@@ -508,13 +508,11 @@ class OrderController extends Controller
         ]);
     }
 
-    public function approveByEmail($token)
+    public function approveByEmail(Request $request, $token)
     {
         try {
             Log::info('Iniciando aprobación por email con token: ' . $token);
-            
-            DB::beginTransaction();
-            
+
             // Buscar la aprobación y cargar las relaciones
             $approval = OrderApproval::where('token', $token)
                 ->with(['order', 'order.approvals'])
@@ -558,13 +556,30 @@ class OrderController extends Controller
                 ]);
             }
 
+            if (!$request->isMethod('post')) {
+                return view('orders.approve-by-email', [
+                    'order' => $order,
+                    'token' => $token,
+                    'approval' => $approval,
+                    'error' => null,
+                    'message' => null
+                ]);
+            }
+
+            $request->validate([
+                'comments' => 'nullable|string|max:1000'
+            ]);
+
+            DB::beginTransaction();
+
             try {
                 Log::info('Actualizando aprobación...');
 
                 // Actualizar la aprobación
                 $approval->fill([
                     'status' => 'aprobado',
-                    'approved_at' => now()
+                    'approved_at' => now(),
+                    'comments' => $request->comments
                 ]);
                 
                 if (!$approval->save()) {
@@ -597,7 +612,7 @@ class OrderController extends Controller
 
                 foreach ($otherAdmins as $admin) {
                     Mail::to($admin->email)
-                        ->send(new OrderConfirmed($order, $currentAdmin, $pendingAdmins->all()));
+                        ->send(new OrderConfirmed($order, $currentAdmin, $pendingAdmins->all(), $request->comments));
                 }
 
                 // Si hay suficientes aprobaciones, actualizar el estado de la orden
