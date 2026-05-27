@@ -13,11 +13,16 @@ class OrderNeedsFinalApproval extends Mailable
 
     public $order;
     public $token;
+    public $approvedApprovals;
 
     public function __construct(Order $order, string $token)
     {
         $this->order = $order;
         $this->token = $token;
+        $this->approvedApprovals = $order->approvals()
+            ->where('status', 'aprobado')
+            ->with('user')
+            ->get();
     }
 
     public function build()

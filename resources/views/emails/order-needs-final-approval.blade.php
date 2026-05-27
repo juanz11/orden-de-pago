@@ -48,9 +48,24 @@
 
         <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 5px;">
             <h3 style="color: #444; margin-bottom: 15px;">Aprobaciones Actuales:</h3>
-            <p style="margin: 10px 0;">✓ Joel López - Director de Finanzas</p>
-            <p style="margin: 10px 0;">✓ Michel López - Tesorería</p>
+            @foreach($approvedApprovals as $approval)
+                <p style="margin: 10px 0;">✓ {{ $approval->user->name ?? 'Usuario no disponible' }} - {{ $approval->user->role ?? 'Rol no disponible' }}</p>
+            @endforeach
         </div>
+
+        @if($approvedApprovals->contains(fn ($approval) => filled($approval->comments)))
+            <div style="margin: 25px 0; padding: 24px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px;">
+                <h2 style="color: #856404; margin: 0 0 18px 0; font-size: 24px; text-align: center;">Observaciones de las aprobaciones</h2>
+                @foreach($approvedApprovals as $approval)
+                    @if($approval->comments)
+                        <div style="margin: 14px 0; padding: 18px; background: #ffffff; border-left: 6px solid #ffc107; border-radius: 5px;">
+                            <p style="margin: 0 0 8px 0; color: #856404; font-size: 18px; font-weight: bold;">Observación de {{ $approval->user->name ?? 'Usuario no disponible' }}</p>
+                            <p style="margin: 0; color: #333; font-size: 20px; font-weight: bold;">{{ $approval->comments }}</p>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        @endif
 
         <div style="text-align: center; margin: 30px 0;">
             <p style="margin: 10px 0;">Esta orden requiere su aprobación final. Por favor, haga clic en el botón a continuación para aprobarla:</p>
