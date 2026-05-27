@@ -12,10 +12,15 @@ class OrderConfirmed extends Mailable
     use Queueable, SerializesModels;
 
     public $order;
+    public $approvedApprovals;
 
     public function __construct(Order $order)
     {
         $this->order = $order;
+        $this->approvedApprovals = $order->approvals()
+            ->where('status', 'aprobado')
+            ->with('user')
+            ->get();
     }
 
     public function build()

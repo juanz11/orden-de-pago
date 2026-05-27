@@ -48,18 +48,33 @@
 
         <div style="margin: 20px 0; padding: 20px; background: #f8f9fa; border-radius: 5px;">
             <h3 style="color: #444; margin-bottom: 15px;">Aprobaciones Actuales:</h3>
-            <p style="margin: 10px 0;">✓ Joel López - Director de Finanzas</p>
-            <p style="margin: 10px 0;">✓ Michel López - Tesorería</p>
+            @foreach($approvedApprovals as $approval)
+                <p style="margin: 10px 0;">✓ {{ $approval->user->name ?? 'Usuario no disponible' }} - {{ $approval->user->role ?? 'Rol no disponible' }}</p>
+            @endforeach
         </div>
+
+        @if($approvedApprovals->contains(fn ($approval) => filled($approval->comments)))
+            <div style="margin: 25px 0; padding: 24px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px;">
+                <h2 style="color: #856404; margin: 0 0 18px 0; font-size: 24px; text-align: center;">Observaciones de las aprobaciones</h2>
+                @foreach($approvedApprovals as $approval)
+                    @if($approval->comments)
+                        <div style="margin: 14px 0; padding: 18px; background: #ffffff; border-left: 6px solid #ffc107; border-radius: 5px;">
+                            <p style="margin: 0 0 8px 0; color: #856404; font-size: 18px; font-weight: bold;">Observación de {{ $approval->user->name ?? 'Usuario no disponible' }}</p>
+                            <p style="margin: 0; color: #333; font-size: 20px; font-weight: bold;">{{ $approval->comments }}</p>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        @endif
 
         <div style="text-align: center; margin: 30px 0;">
             <p style="margin: 10px 0;">Esta orden requiere su aprobación final. Por favor, haga clic en el botón a continuación para aprobarla:</p>
             <!-- Botón compatible con Outlook -->
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:separate;line-height:100%;">
               <tr>
-                <td align="center" bgcolor="#4CAF50" role="presentation" style="border:none;border-radius:3px;cursor:auto;mso-padding-alt:10px 25px;background:#4CAF50;" valign="middle">
+                <td align="center" bgcolor="#4CAF50" role="presentation" style="border:none;border-radius:6px;cursor:auto;mso-padding-alt:16px 40px;background:#4CAF50;" valign="middle">
                   <a href="{{ route('orders.approve-by-email', ['token' => $token]) }}"
-                     style="display:inline-block;background:#4CAF50;color:#ffffff;font-family:Arial, sans-serif;font-size:16px;font-weight:bold;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:10px 25px;mso-padding-alt:0px;border-radius:3px;"
+                     style="display:inline-block;background:#4CAF50;color:#ffffff;font-family:Arial, sans-serif;font-size:20px;font-weight:bold;line-height:130%;margin:0;text-decoration:none;text-transform:none;padding:16px 40px;mso-padding-alt:0px;border-radius:6px;"
                      target="_blank">
                     Aprobar Orden
                   </a>
