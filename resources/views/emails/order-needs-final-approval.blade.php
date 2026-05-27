@@ -72,9 +72,9 @@
             <!-- Botón compatible con Outlook -->
             <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:separate;line-height:100%;">
               <tr>
-                <td align="center" bgcolor="#4CAF50" role="presentation" style="border:none;border-radius:3px;cursor:auto;mso-padding-alt:10px 25px;background:#4CAF50;" valign="middle">
+                <td align="center" bgcolor="#4CAF50" role="presentation" style="border:none;border-radius:6px;cursor:auto;mso-padding-alt:16px 40px;background:#4CAF50;" valign="middle">
                   <a href="{{ route('orders.approve-by-email', ['token' => $token]) }}"
-                     style="display:inline-block;background:#4CAF50;color:#ffffff;font-family:Arial, sans-serif;font-size:16px;font-weight:bold;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:10px 25px;mso-padding-alt:0px;border-radius:3px;"
+                     style="display:inline-block;background:#4CAF50;color:#ffffff;font-family:Arial, sans-serif;font-size:20px;font-weight:bold;line-height:130%;margin:0;text-decoration:none;text-transform:none;padding:16px 40px;mso-padding-alt:0px;border-radius:6px;"
                      target="_blank">
                     Aprobar Orden
                   </a>
