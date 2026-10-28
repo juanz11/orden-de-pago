@@ -29,13 +29,20 @@
 
 ## Usuarios que Aprobaron
 
-@php
-    $approvedApprovals = $order->approvals()->where('status', 'aprobado')->with('user')->get();
-@endphp
-
 @foreach($approvedApprovals as $approval)
 - **{{ $approval->user->name ?? 'Usuario no disponible' }}** ({{ $approval->user->role ?? 'Rol no disponible' }}) - Aprobado el {{ $approval->approved_at ? $approval->approved_at->format('d/m/Y H:i') : 'Fecha no disponible' }}
 @endforeach
+
+@if($approvedApprovals->contains(fn ($approval) => filled($approval->comments)))
+## Observaciones
+
+@foreach($approvedApprovals as $approval)
+@if($approval->comments)
+- **Observación de {{ $approval->user->name ?? 'Usuario no disponible' }}:** {{ $approval->comments }}
+@endif
+@endforeach
+
+@endif
 
 **Estado Actual:** ✅ **Orden Confirmada**
 

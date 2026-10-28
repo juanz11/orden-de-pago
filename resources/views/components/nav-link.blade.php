@@ -1,11 +1,19 @@
-@props(['active'])
+@props(['active' => false])
 
 @php
 $classes = ($active ?? false)
-            ? 'inline-flex items-center px-1 pt-1 border-b-2 border-indigo-400 text-sm font-medium leading-5 text-gray-900 focus:outline-none focus:border-indigo-700 transition duration-150 ease-in-out'
-            : 'inline-flex items-center px-1 pt-1 border-b-2 border-transparent text-sm font-medium leading-5 text-gray-500 hover:text-gray-700 hover:border-gray-300 focus:outline-none focus:text-gray-700 focus:border-gray-300 transition duration-150 ease-in-out';
+            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-950/40'
+            : 'text-blue-200/70 hover:text-white hover:bg-white/10';
 @endphp
 
-<a {{ $attributes->merge(['class' => $classes]) }}>
-    {{ $slot }}
+<a {{ $attributes->merge(['class' => 'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 ' . $classes]) }}>
+    @isset($icon)
+        <span class="shrink-0 {{ $active ? 'text-white' : 'text-blue-300/60 group-hover:text-blue-200' }} transition-colors duration-150">
+            {{ $icon }}
+        </span>
+    @endisset
+    <span class="truncate">{{ $slot }}</span>
+    @if($active)
+        <span class="ml-auto w-1.5 h-1.5 rounded-full bg-sky-300 shadow shadow-sky-300/50"></span>
+    @endif
 </a>
