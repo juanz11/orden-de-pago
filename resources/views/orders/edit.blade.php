@@ -9,6 +9,8 @@
                     <h2 class="text-2xl font-bold">Editar Orden</h2>
                 </div>
 
+                @include('components.exchange-rate')
+
                 <form method="POST" action="{{ route('orders.update', $order) }}" class="space-y-6">
                     @csrf
                     @method('PUT')
@@ -53,7 +55,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
                                 </button>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Descripción</label>
                                         <input type="text" name="items[{{ $index }}][description]" required
@@ -61,23 +63,31 @@
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700">Precio Unitario</label>
-                                        <input type="number" step="0.01" name="items[{{ $index }}][unit_price]" required
-                                            value="{{ $item->unit_price }}"
-                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            onchange="calculateItemTotal(this)">
-                                    </div>
-                                    <div>
                                         <label class="block text-sm font-medium text-gray-700">Cantidad</label>
                                         <input type="number" name="items[{{ $index }}][quantity]" required
                                             value="{{ $item->quantity }}"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            onchange="calculateItemTotal(this)">
+                                            oninput="calculateItemTotal(this)">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Precio Unitario ($)</label>
+                                        <input type="number" step="0.01" min="0" placeholder="0.00"
+                                            class="unit-price-usd mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            oninput="calculateFromUsd(this)">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Precio Unitario (Bs.)</label>
+                                        <input type="number" step="0.01" name="items[{{ $index }}][unit_price]" required placeholder="0.00"
+                                            value="{{ $item->unit_price }}"
+                                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            oninput="calculateFromBs(this)">
                                     </div>
                                 </div>
                                 <div class="mt-2">
                                     <span class="text-sm font-medium text-gray-700">Total: </span>
                                     <span class="item-total">{{ number_format($item->total, 2) }}</span>
+                                    <span class="text-sm text-gray-700"> Bs.</span>
+                                    <span class="text-sm text-gray-500">($ <span class="item-total-usd">0.00</span>)</span>
                                 </div>
                             </div>
                             @endforeach
@@ -101,8 +111,15 @@
                         </div>
 
                         <div class="mt-4 text-right">
-                            <span class="text-lg font-medium">Total General: </span>
-                            <span id="grand_total" class="text-lg font-bold">{{ number_format($order->total, 2) }}</span>
+                            <div>
+                                <span class="text-lg font-medium">Total General: </span>
+                                <span id="grand_total" class="text-lg font-bold">{{ number_format($order->total, 2) }}</span>
+                                <span class="text-lg font-medium"> Bs.</span>
+                            </div>
+                            <div class="text-sm text-gray-600 mt-1">
+                                <span>Equivalente: $</span>
+                                <span id="dollar_total" class="font-medium">0.00</span>
+                            </div>
                         </div>
                     </div>
 
@@ -138,6 +155,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     let itemCount = {{ count($order->items) }};
+    const bcvRate = parseFloat(document.querySelector('.exchange-rate-value')?.dataset?.rate || 0);
 
     window.toggleOtherSupplier = function(value) {
         const otherSupplierDiv = document.getElementById('other_supplier_div');
@@ -151,15 +169,24 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addItem = function() {
         const template = document.querySelector('.item-entry').cloneNode(true);
         const inputs = template.querySelectorAll('input');
-        
+
         inputs.forEach(input => {
             const name = input.getAttribute('name');
-            input.setAttribute('name', name.replace(/\[\d+\]/, `[${itemCount}]`));
+            if (name) {
+                input.setAttribute('name', name.replace(/\[\d+\]/, `[${itemCount}]`));
+            }
             input.value = '';
         });
 
         const totalSpan = template.querySelector('.item-total');
         totalSpan.textContent = '0.00';
+        template.querySelector('.item-total-usd').textContent = '0.00';
+
+        const usdInput = template.querySelector('.unit-price-usd');
+        if (usdInput && !(bcvRate > 0)) {
+            usdInput.disabled = true;
+            usdInput.placeholder = 'Sin tasa BCV';
+        }
 
         document.getElementById('items_list').appendChild(template);
         itemCount++;
@@ -186,22 +213,64 @@ document.addEventListener('DOMContentLoaded', function() {
         const unitPrice = parseFloat(itemEntry.querySelector('input[name*="[unit_price]"]').value) || 0;
         const quantity = parseInt(itemEntry.querySelector('input[name*="[quantity]"]').value) || 0;
         const total = unitPrice * quantity;
-        
+
         itemEntry.querySelector('.item-total').textContent = total.toFixed(2);
+
+        const usdTotalSpan = itemEntry.querySelector('.item-total-usd');
+        if (usdTotalSpan) {
+            usdTotalSpan.textContent = bcvRate > 0 ? (total / bcvRate).toFixed(2) : '0.00';
+        }
+
         calculateGrandTotal();
+    };
+
+    window.calculateFromUsd = function(input) {
+        const itemEntry = input.closest('.item-entry');
+        const usd = parseFloat(input.value) || 0;
+        const bsInput = itemEntry.querySelector('input[name*="[unit_price]"]');
+        bsInput.value = bcvRate > 0 ? (usd * bcvRate).toFixed(2) : '';
+        calculateItemTotal(bsInput);
+    };
+
+    window.calculateFromBs = function(input) {
+        const itemEntry = input.closest('.item-entry');
+        const bs = parseFloat(input.value) || 0;
+        const usdInput = itemEntry.querySelector('.unit-price-usd');
+        if (usdInput) {
+            usdInput.value = bcvRate > 0 ? (bs / bcvRate).toFixed(2) : '';
+        }
+        calculateItemTotal(input);
     };
 
     window.calculateGrandTotal = function() {
         const totals = Array.from(document.querySelectorAll('.item-total'))
             .map(span => parseFloat(span.textContent) || 0);
-        
+
         const grandTotal = totals.reduce((sum, total) => sum + total, 0);
         document.getElementById('grand_total').textContent = grandTotal.toFixed(2);
+
+        const dollarTotalSpan = document.getElementById('dollar_total');
+        if (dollarTotalSpan) {
+            dollarTotalSpan.textContent = bcvRate > 0 ? (grandTotal / bcvRate).toFixed(2) : '0.00';
+        }
     };
 
     // Inicializar
     const supplierSelect = document.getElementById('supplier_id');
     toggleOtherSupplier(supplierSelect.value);
+
+    if (bcvRate > 0) {
+        // Rellenar los campos $ con el equivalente de los precios en Bs. guardados
+        document.querySelectorAll('.item-entry').forEach(itemEntry => {
+            const bsInput = itemEntry.querySelector('input[name*="[unit_price]"]');
+            calculateFromBs(bsInput);
+        });
+    } else {
+        document.querySelectorAll('.unit-price-usd').forEach(input => {
+            input.disabled = true;
+            input.placeholder = 'Sin tasa BCV';
+        });
+    }
 });
 </script>
 @endpush

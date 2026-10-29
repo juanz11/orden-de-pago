@@ -80,30 +80,37 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                                     </svg>
                                 </button>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Descripción</label>
                                         <input type="text" name="items[0][description]" required
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                                     </div>
-                                   
+
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Cantidad</label>
                                         <input type="number" name="items[0][quantity]" required
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            onchange="calculateItemTotal(this)">
+                                            oninput="calculateItemTotal(this)">
                                     </div>
-                                     <div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700">Precio Unitario ($)</label>
+                                        <input type="number" step="0.01" min="0" placeholder="0.00"
+                                            class="unit-price-usd mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                                            oninput="calculateFromUsd(this)">
+                                    </div>
+                                    <div>
                                         <label class="block text-sm font-medium text-gray-700">Precio Unitario (Bs.)</label>
-                                        <input type="number" step="0.01" name="items[0][unit_price]" required
+                                        <input type="number" step="0.01" name="items[0][unit_price]" required placeholder="0.00"
                                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-                                            onchange="calculateItemTotal(this)">
+                                            oninput="calculateFromBs(this)">
                                     </div>
                                 </div>
                                 <div class="mt-2">
                                     <span class="text-sm font-medium text-gray-700">Total: </span>
                                     <span class="item-total">0,00</span>
                                     <span class="text-sm text-gray-700"> Bs.</span>
+                                    <span class="text-sm text-gray-500">($ <span class="item-total-usd">0.00</span>)</span>
                                 </div>
                             </div>
                         </div>
@@ -333,10 +340,12 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addItem = function() {
         const template = document.querySelector('.item-entry').cloneNode(true);
         const inputs = template.querySelectorAll('input');
-        
+
         inputs.forEach(input => {
             const name = input.getAttribute('name');
-            input.setAttribute('name', name.replace('[0]', `[${itemCount}]`));
+            if (name) {
+                input.setAttribute('name', name.replace('[0]', `[${itemCount}]`));
+            }
             input.value = '';
         });
 
@@ -345,6 +354,13 @@ document.addEventListener('DOMContentLoaded', function() {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(0);
+        template.querySelector('.item-total-usd').textContent = '0.00';
+
+        const usdInput = template.querySelector('.unit-price-usd');
+        if (usdInput && !(bcvRate > 0)) {
+            usdInput.disabled = true;
+            usdInput.placeholder = 'Sin tasa BCV';
+        }
 
         document.getElementById('items_list').appendChild(template);
         itemCount++;
@@ -371,14 +387,38 @@ document.addEventListener('DOMContentLoaded', function() {
         const unitPrice = parseFloat(itemEntry.querySelector('input[name*="[unit_price]"]').value) || 0;
         const quantity = parseInt(itemEntry.querySelector('input[name*="[quantity]"]').value) || 0;
         const total = unitPrice * quantity;
-        
+
         const formattedTotal = new Intl.NumberFormat('es-VE', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         }).format(total);
-        
+
         itemEntry.querySelector('.item-total').textContent = formattedTotal;
+
+        const usdTotalSpan = itemEntry.querySelector('.item-total-usd');
+        if (usdTotalSpan) {
+            usdTotalSpan.textContent = bcvRate > 0 ? (total / bcvRate).toFixed(2) : '0.00';
+        }
+
         calculateGrandTotal();
+    };
+
+    window.calculateFromUsd = function(input) {
+        const itemEntry = input.closest('.item-entry');
+        const usd = parseFloat(input.value) || 0;
+        const bsInput = itemEntry.querySelector('input[name*="[unit_price]"]');
+        bsInput.value = bcvRate > 0 ? (usd * bcvRate).toFixed(2) : '';
+        calculateItemTotal(bsInput);
+    };
+
+    window.calculateFromBs = function(input) {
+        const itemEntry = input.closest('.item-entry');
+        const bs = parseFloat(input.value) || 0;
+        const usdInput = itemEntry.querySelector('.unit-price-usd');
+        if (usdInput) {
+            usdInput.value = bcvRate > 0 ? (bs / bcvRate).toFixed(2) : '';
+        }
+        calculateItemTotal(input);
     };
 
     window.calculateGrandTotal = function() {
@@ -407,6 +447,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializar
     const supplierSelect = document.getElementById('supplier_id');
     toggleOtherSupplier(supplierSelect.value);
+
+    if (!(bcvRate > 0)) {
+        document.querySelectorAll('.unit-price-usd').forEach(input => {
+            input.disabled = true;
+            input.placeholder = 'Sin tasa BCV';
+        });
+    }
 });
 </script>
 @endpush
